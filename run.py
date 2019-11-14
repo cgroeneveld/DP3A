@@ -5,6 +5,11 @@ import os
 import argparse
 import subprocess
 
+def init_directories(fpath, N):
+    os.mkdir(fpath+'/init')
+    for n in range(N):
+        os.mkdir(fpath+'/pcal{0}'.format(n+1))
+
 def parse_pset(fname):
     with open(fname, 'r') as handle:
         data = [line for line in handle]
@@ -28,9 +33,9 @@ def run_losoto(fpath, ms, n):
     with open('lst.pset', 'r') as handle:
         data = [line for line in handle]
     if n == 0:
-        data[-1] = 'prefix = {0}/IMAGED/init/'.format(fpath)
+        data[-1] = 'prefix = {0}/init/'.format(fpath)
     else:
-        data[-1] = 'prefix = {0}/IMAGED/pcal{1}/'.format(fpath,n)
+        data[-1] = 'prefix = {0}/pcal{1}/'.format(fpath,n)
     os.remove('lst.pset')
     with open('lst.pset', 'w') as handle:
         for line in data:
@@ -57,7 +62,7 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
         acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
     
-    fulimg = '{0} -name {1}/IMAGED/{2}/ws {3}'.format(imaging, fpath, imname, ms)
+    fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
     subprocess.call('pwd')
     subprocess.call('DPPP {}'.format(' '.join(ddecal)))
@@ -73,6 +78,8 @@ if __name__=="__main__":
     parser.add_argument('-f', type = str, help = "Location of measurement set", required = True)
 
     parsed = parser.parse_args()
+
+    init_directories(parsed.f, parsed.N)
 
     ddecal = parse_pset('ddecal_init.pset')
     acal = parse_pset('acal_init.pset')
