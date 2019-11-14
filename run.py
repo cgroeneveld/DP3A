@@ -46,13 +46,13 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
     if n == 0:
         # First iteration
         ddecal.append('ddecal.h5parm={0}/instrument.h5'.format(ms))
-        acal.append('applycal.h5parm={0}/instrument.h5'.format(ms))
+        acal.append('applycal.parmdb={0}/instrument.h5'.format(ms))
         ddecal.append('msin={0}'.format(ms))
         acal.append('msin={0}'.format(ms))
         imname = 'init'
     else:
         ddecal.append('ddecal.h5parm={0}/instrument_{1}.h5'.format(ms, n))
-        acal.append('applycal.h5parm={0}/instrument_{1}.h5'.format(ms, n))
+        acal.append('applycal.parmdb={0}/instrument_{1}.h5'.format(ms, n))
         ddecal.append('msin={0}'.format(ms))
         acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
