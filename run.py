@@ -57,8 +57,9 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
         acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
     
-    fulimg = '{0} -name {1}/IMAGED/pcal{2}/ws {3}'.format(imaging, fpath, imname, ms)
+    fulimg = '{0} -name {1}/IMAGED/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
+    subprocess.call('pwd')
     subprocess.call('DPPP {}'.format(' '.join(ddecal)))
     subprocess.call('DPPP {}'.format(' '.join(acal)))
     subprocess.call(fulimg)
