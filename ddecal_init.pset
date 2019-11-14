@@ -1,0 +1,10 @@
+steps = [ddecal]
+msin.datacolumn = DATA
+msout = .
+msout.datacolumn = CORRECTED_DATA
+
+ddecal.mode = "phaseonly"
+ddecal.usemodelcolumn = True
+ddecal.nchan = 1
+ddecal.solint = 1
+ddecal.maxiter = 150

@@ -1,0 +1,13 @@
+numthreads = 4
+msin = "../SB430_439.semi.ms"
+steps = [ddecal]
+msin.datacolumn = DATA
+msout = .
+msout.datacolumn = CORRECTED_DATA
+
+ddecal.mode= "phaseonly"
+ddecal.usemodelcolumn = True
+ddecal.h5parm = "../SB430_439.semi.ms/instrument_01.h5"
+ddecal.nchan = 1
+ddecal.solint = 1
+ddecal.maxiter = 150 
