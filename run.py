@@ -72,10 +72,13 @@ if __name__=="__main__":
     parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
     parser.add_argument('-f', type = str, help = "Location of measurement set", required = True)
 
+    parsed = parser.parse_args()
+
     ddecal = parse_pset('ddecal_init.pset')
     acal = parse_pset('acal_init.pset')
     with open('imaging.sh') as handle:
         line = handle.read()
     imaging = line.rstrip('\n') + ' -data-column CORRECTED_DATA'
 
-    run_iter(ddecal, acal, imaging, 0, 'myms', 'myfpath')
+    for n in range(parsed.N):
+        run_iter(ddecal, acal, imaging, n, parsed.f, parsed.p)
