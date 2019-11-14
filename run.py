@@ -45,16 +45,16 @@ def run_losoto(fpath, ms, n):
 def run_iter(ddecal, acal, imaging, n, ms, fpath):
     if n == 0:
         # First iteration
-        ddecal.append('ddecal.h5parm = {0}/instrument.h5'.format(ms))
-        acal.append('applycal.h5parm = {0}/instrument.h5'.format(ms))
-        ddecal.append('msin = {0}'.format(ms))
-        acal.append('msin = {0}'.format(ms))
+        ddecal.append('ddecal.h5parm={0}/instrument.h5'.format(ms))
+        acal.append('applycal.h5parm={0}/instrument.h5'.format(ms))
+        ddecal.append('msin={0}'.format(ms))
+        acal.append('msin={0}'.format(ms))
         imname = 'init'
     else:
-        ddecal.append('ddecal.h5parm = {0}/instrument_{1}.h5'.format(ms, n))
-        acal.append('applycal.h5parm = {0}/instrument_{1}.h5'.format(ms, n))
-        ddecal.append('msin = {0}'.format(ms))
-        acal.append('msin = {0}'.format(ms))
+        ddecal.append('ddecal.h5parm={0}/instrument_{1}.h5'.format(ms, n))
+        acal.append('applycal.h5parm={0}/instrument_{1}.h5'.format(ms, n))
+        ddecal.append('msin={0}'.format(ms))
+        acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
     
     fulimg = '{0} -name {1}/IMAGED/pcal{2}/ws {3}'.format(imaging, fpath, imname, ms)
