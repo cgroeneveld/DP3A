@@ -5,8 +5,6 @@ import os
 import argparse
 import subprocess
 
-subprocess.call = lambda x: print(x)
-
 def parse_pset(fname):
     with open(fname, 'r') as handle:
         data = [line for line in handle]
