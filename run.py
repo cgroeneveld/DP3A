@@ -5,6 +5,11 @@ import os
 import argparse
 import subprocess
 
+"""
+    Yes, I know I am using shell=True. Please don't do anything bad.
+"""
+
+
 def parse_pset(fname):
     with open(fname, 'r') as handle:
         data = [line for line in handle]
@@ -36,9 +41,9 @@ def run_losoto(fpath, ms, n):
         for line in data:
             handle.write(line)
     if n ==0:
-        subprocess.call('losoto {0}/instrument.h5 lst.pset'.format(ms))
+        subprocess.call('losoto {0}/instrument.h5 lst.pset'.format(ms), shell=True)
     else:
-        subprocess.call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n))
+        subprocess.call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n), shell=True)
 
 
 
@@ -59,9 +64,9 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
     
     fulimg = '{0} -name {1}/IMAGED/pcal{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
-    subprocess.call('DPPP {}'.format(' '.join(ddecal)))
-    subprocess.call('DPPP {}'.format(' '.join(acal)))
-    subprocess.call(fulimg)
+    subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell=True)
+    subprocess.call('DPPP {}'.format(' '.join(acal)), shell=True)
+    subprocess.call(fulimg, shell=True)
     run_losoto(fpath, ms, n)
 
 
