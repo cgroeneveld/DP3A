@@ -82,7 +82,7 @@ if __name__=="__main__":
 
     parsed = parser.parse_args()
 
-    init_directories(parsed.f, parsed.N)
+    init_directories(parsed.p, parsed.N)
 
     ddecal = parse_pset('ddecal_init.pset')
     acal = parse_pset('acal_init.pset')
