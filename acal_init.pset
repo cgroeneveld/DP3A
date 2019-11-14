@@ -1,8 +1,6 @@
-msin = "../SB430_439.semi.ms"
 msin.datacolumn="DATA"
 msout = .
 msout.datacolumn=CORRECTED_DATA
 steps = [applycal]
 
-applycal.parmdb = "../SB430_439.semi.ms/instrument.h5"
 applycal.correction = "phase000"
