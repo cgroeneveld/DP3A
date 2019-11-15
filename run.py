@@ -5,10 +5,17 @@ import os
 import argparse
 import subprocess
 
+
 def init_directories(fpath, N):
-    os.mkdir(fpath+'/init')
+    try:
+        os.mkdir(fpath+'/init')
+    except:
+        pass
     for n in range(N):
-        os.mkdir(fpath+'/pcal{0}'.format(n+1))
+	try:
+	    os.mkdir(fpath+'/pcal{0}'.format(n+1))
+	except:
+	    pass
 """
     Yes, I know I am using shell=True. Please don't do anything bad.
 """
@@ -45,7 +52,7 @@ def run_losoto(fpath, ms, n):
         for line in data:
             handle.write(line)
     if n ==0:
-        subprocess.call('losoto {0}/instrument.h5 lst.pset'.format(ms), shell=True)
+        subprocess.call('losoto {0}/instrument.h5 lst.pset'.format(ms), shell = True)
     else:
         subprocess.call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n), shell=True)
 
