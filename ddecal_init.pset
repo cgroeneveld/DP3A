@@ -6,5 +6,6 @@ msout.datacolumn = CORRECTED_DATA
 ddecal.mode = "phaseonly"
 ddecal.usemodelcolumn = True
 ddecal.nchan = 1
+ddecal.uvlambdamin=5e3
 ddecal.solint = 1
 ddecal.maxiter = 150

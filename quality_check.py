@@ -35,12 +35,12 @@ def rebuild_dirlist(dirlist):
     pcals = list(filter(lambda x: 'pcal' in x, dirlist))
     numbs = np.array([int(pcal[4:]) for pcal in pcals])
     rebuild_pcals = ['pcal'+str(num) for num in np.sort(numbs)]
-    return ['init'].append(rebuild_pcals)
+    return ['init'] + rebuild_pcals
 
 def plotter(text, x, y, path):
     fig,ax = plt.subplots()
     ax.plot(y)
-    ax.set_xlabel(x)
+    ax.set_xticklabels(['..']+x)
     fig.suptitle(text)
     fig.savefig(path, format = 'pdf')
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     maxmin = []
     snrs = []
     for run in dirlist:
-        data = fits.getdata(parser.p+run)[0,0,:,:]
+        data = fits.getdata(parsed.p+run+'/ws-image.fits')[0,0,:,:]
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))
