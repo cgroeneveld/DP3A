@@ -86,6 +86,7 @@ if __name__=="__main__":
     parser.add_argument('-N', type = int, help = "Amount of self calibration cycles it needs to perform", required = True)
     parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
     parser.add_argument('-f', type = str, help = "Location of measurement set", required = True)
+    parser.add_argument('-i', type = int, help = "Label of first self calibration", default = 0)
 
     parsed = parser.parse_args()
 
@@ -97,5 +98,5 @@ if __name__=="__main__":
         line = handle.read()
     imaging = line.rstrip('\n') + ' -data-column CORRECTED_DATA'
 
-    for n in range(parsed.N):
+    for n in range(parser.i, parsed.N):
         run_iter(ddecal, acal, imaging, n, parsed.f, parsed.p)
