@@ -5,6 +5,8 @@ import os
 import argparse
 import subprocess
 
+def subprocess.call(x):
+    print(x)
 
 def init_directories(fpath, N):
     try:
@@ -13,7 +15,7 @@ def init_directories(fpath, N):
         pass
     for n in range(N):
 	try:
-	    os.mkdir(fpath+'/pcal{0}'.format(n+1))
+	    os.mkdir(fpath+'/pcal{0}'.format(n))
 	except:
 	    pass
 """
@@ -34,6 +36,8 @@ def parse_pset(fname):
             raise ValueError('Please do not define your own h5parm. We will do that for you.')
         elif 'msin = ' in x:
             raise ValueError('Please do not define msin - we do that ourselves')
+        elif 'msout.datacolumn' in x:
+            raise ValueError('Please do not define msout.datacolumn - we do that ourselves')
         else:
             newdata.append(''.join(list(filter(lambda y: y != ' ', x))))
     return newdata
@@ -58,7 +62,7 @@ def run_losoto(fpath, ms, n):
 
 
 
-def run_iter(ddecal, acal, imaging, n, ms, fpath):
+def run_phase(ddecal, acal, imaging, n, ms, fpath):
     if n == 0:
         # First iteration
         ddecal.append('ddecal.h5parm={0}/instrument.h5'.format(ms))
@@ -72,7 +76,9 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
         ddecal.append('msin={0}'.format(ms))
         acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
-    
+
+    ddecal.append('msout.datacolumn=CORRECTED_DATA')    
+    acal.append('msout.datacolumn=CORRECTED_DATA')
     fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
     subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell=True)
@@ -80,23 +86,60 @@ def run_iter(ddecal, acal, imaging, n, ms, fpath):
     subprocess.call(fulimg, shell=True)
     run_losoto(fpath, ms, n)
 
+def run_amp(ddecal, acal, ddeamp, aamp, imaging, n, ms, fpath):
+    ddecal.append('ddecal.h5parm={0}/instrument_p{1}.h5'.format(ms, n))
+    acal.append('applycal.parmdb={0}/instrument_p{1}.h5'.format(ms, n))
+    ddecal.append('msin={0}'.format(ms))
+    acal.append('msin={0}'.format(ms))
+    ddecal.append('msout.datacolumn=CORRECTED_PHASE')
+    acal.append('msout.datacolumn=CORRECTED_PHASE')
+
+    ddeamp.append('msin={0}'.format(ms))
+    ddeamp.append('ddecal.h5parm={0}/instrument_a{1}.h5'.format(ms, n))
+    ddeamp.append('msin.datacolumn=CORRECTED_PHASE')
+    ddeamp.append('msout.datacolumn=CORRECTED_DATA2')
+
+    aamp.append('applycal.parmdb={0}/instrument_a{1}.h5'.format(ms, n))
+    aamp.append('msin={0}'.format(ms))
+    aamp.append('msin.datacolumn=CORRECTED_PHASE')
+    aamp.append('msout.datacolumn=CORRECTED_DATA2')
+
+    imname = 'apcal{0}'.format(n)
+    fulimg = '{0} - name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
+
+    subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell = True)
+    subprocess.call('DPPP {}'.format(' '.join(acal)), shell = True)
+    subprocess.call('DPPP {}'.format(' '.join(ddeamp)), shell = True)
+    subprocess.call('DPPP {}'.format(' '.join(aamp)), shell = True)
+    subprocess.call(fulimg, shell = True)
+    run_losoto(fpath,ms,n)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='An automation script')
-    parser.add_argument('-N', type = int, help = "Amount of self calibration cycles it needs to perform", required = True)
+    parser.add_argument('-Np', type = int, help = "Amount of self calibration cycles it needs to perform", required = True)
+    parser.add_argument('-Na', type = int, help = "Amount of self calibration (amplitude) cycles it needs to perform", default = 0)
     parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
     parser.add_argument('-f', type = str, help = "Location of measurement set", required = True)
-    parser.add_argument('-i', type = int, help = "Label of first self calibration", default = 0)
+    parser.add_argument('-ip', type = int, help = "Label of first self calibration", default = 0)
+    parser.add_argument('-ia', type = int, help = "Label of first amp self calibration", default = 1)
 
     parsed = parser.parse_args()
 
-    init_directories(parsed.p, parsed.N)
+    init_directories(parsed.p, parsed.Np)
 
     ddecal = parse_pset('ddecal_init.pset')
     acal = parse_pset('acal_init.pset')
+    ddeamp = parse_pset('ddecal_ampself.pset')
+    aamp = parse_pset('acal_ampself.pset')
     with open('imaging.sh') as handle:
-        line = handle.read()
-    imaging = line.rstrip('\n') + ' -data-column CORRECTED_DATA'
+        base_image = handle.read()
 
-    for n in range(parser.i, parsed.N):
-        run_iter(ddecal, acal, imaging, n, parsed.f, parsed.p)
+    if Np != 0:
+        for n in range(parser.ip, parsed.Np):
+            imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA'
+            run_phase(ddecal, acal, imaging, n, parsed.f, parsed.p)
+    
+    if Na != 0:
+        for n in range(parser.ia, parsed.Na):
+            imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA2'
+            run_amp(ddecal, acal, ddeamp, aamp, imaging, n, parsed.f, parsed.p)
