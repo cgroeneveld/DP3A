@@ -1,11 +1,7 @@
-msin = ../SB430_439.semi.ms
-msin.datacolumn = CORRECTED_PHASE
 msout = .
-msout.datacolumn=CORRECTED_DATA2
 steps = [applycal]
 
 applycal.steps = [applycal1, applycal2]
-applycal.parmdb = "../SB430_439.semi.ms/instrument_a01.h5"
 
 applycal.applycal2.correction=amplitude000
 

@@ -1,7 +1,6 @@
 steps = [ddecal]
 msin.datacolumn = DATA
 msout = .
-msout.datacolumn = CORRECTED_DATA
 
 ddecal.mode = "phaseonly"
 ddecal.usemodelcolumn = True

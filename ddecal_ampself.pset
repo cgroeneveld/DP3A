@@ -1,13 +1,9 @@
 numthreads = 26
-msin = "../SB430_439.semi.ms"
 steps = [ddecal]
-msin.datacolumn = CORRECTED_PHASE
 msout = .
-msout.datacolumn = CORRECTED_DATA2
 
 ddecal.mode= "diagonal"
 ddecal.usemodelcolumn = True
-ddecal.h5parm = "../SB430_439.semi.ms/instrument_a01.h5"
 ddecal.nchan = 1
 ddecal.solint = 400
 ddecal.maxiter = 150

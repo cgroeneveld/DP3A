@@ -5,19 +5,16 @@ import os
 import argparse
 import subprocess
 
-def subprocess.call(x):
-    print(x)
-
 def init_directories(fpath, N):
     try:
         os.mkdir(fpath+'/init')
     except:
         pass
     for n in range(N):
-	try:
-	    os.mkdir(fpath+'/pcal{0}'.format(n))
-	except:
-	    pass
+        try:
+            os.mkdir(fpath+'/pcal{0}'.format(n))
+        except:
+            pass
 """
     Yes, I know I am using shell=True. Please don't do anything bad.
 """
@@ -121,7 +118,7 @@ if __name__=="__main__":
     parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
     parser.add_argument('-f', type = str, help = "Location of measurement set", required = True)
     parser.add_argument('-ip', type = int, help = "Label of first self calibration", default = 0)
-    parser.add_argument('-ia', type = int, help = "Label of first amp self calibration", default = 1)
+    parser.add_argument('-ia', type = int, help = "Label of first amp self calibration", default = 0)
 
     parsed = parser.parse_args()
 
@@ -134,12 +131,12 @@ if __name__=="__main__":
     with open('imaging.sh') as handle:
         base_image = handle.read()
 
-    if Np != 0:
-        for n in range(parser.ip, parsed.Np):
+    if parsed.Np != 0:
+        for n in range(parsed.ip, parsed.Np):
             imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA'
             run_phase(ddecal, acal, imaging, n, parsed.f, parsed.p)
     
-    if Na != 0:
-        for n in range(parser.ia, parsed.Na):
+    if parsed.Na != 0:
+        for n in range(parsed.ia, parsed.Na):
             imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA2'
             run_amp(ddecal, acal, ddeamp, aamp, imaging, n, parsed.f, parsed.p)

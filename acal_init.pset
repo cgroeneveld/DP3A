@@ -1,6 +1,5 @@
 msin.datacolumn="DATA"
 msout = .
-msout.datacolumn=CORRECTED_DATA
 steps = [applycal]
 
 applycal.correction = "phase000"
