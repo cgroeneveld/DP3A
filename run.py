@@ -9,6 +9,7 @@ def writetofile(x, shell):
     with open('kittens.fl' , 'a') as handle:
         handle.write(x+'\n')
 
+# subprocess.call = lambda x,shell: writetofile(x,shell)
 
 def init_directories(fpath, Np, Na):
     try:
