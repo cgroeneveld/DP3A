@@ -5,14 +5,24 @@ import os
 import argparse
 import subprocess
 
-def init_directories(fpath, N):
+def writetofile(x, shell):
+    with open('kittens.fl' , 'a') as handle:
+        handle.write(x+'\n')
+
+
+def init_directories(fpath, Np, Na):
     try:
         os.mkdir(fpath+'/init')
     except:
         pass
-    for n in range(N):
+    for n in range(Np):
         try:
             os.mkdir(fpath+'/pcal{0}'.format(n))
+        except:
+            pass
+    for n in range(Na):
+        try:
+            os.mkdir(fpath+'/apcal{0}'.format(n))
         except:
             pass
 """
@@ -102,7 +112,7 @@ def run_amp(ddecal, acal, ddeamp, aamp, imaging, n, ms, fpath):
     aamp.append('msout.datacolumn=CORRECTED_DATA2')
 
     imname = 'apcal{0}'.format(n)
-    fulimg = '{0} - name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
+    fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
     subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell = True)
     subprocess.call('DPPP {}'.format(' '.join(acal)), shell = True)
@@ -122,7 +132,7 @@ if __name__=="__main__":
 
     parsed = parser.parse_args()
 
-    init_directories(parsed.p, parsed.Np)
+    init_directories(parsed.p, parsed.Np, parsed.Na)
 
     ddecal = parse_pset('ddecal_init.pset')
     acal = parse_pset('acal_init.pset')
