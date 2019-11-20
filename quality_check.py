@@ -35,7 +35,7 @@ def rebuild_dirlist(dirlist):
     apcals = list(filter(lambda x: 'apcal' in x, dirlist))
     pcals = list(filter(lambda x: 'pcal' in x and 'apcal' not in x, dirlist))
     numbs_pcal = np.array([int(pcal[4:]) for pcal in pcals])
-    numbs_apcal = np.array([int(apcal[5:]) for apcal in apcals]
+    numbs_apcal = np.array([int(apcal[5:]) for apcal in apcals])
     rebuild_pcals = ['pcal'+str(num) for num in np.sort(numbs_pcal)]
     rebuild_apcals = ['apcal'+str(num) for num in np.sort(numbs_apcal)]
     return ['init'] + rebuild_pcals + rebuild_apcals
