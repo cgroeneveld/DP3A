@@ -6,6 +6,7 @@ import numpy as np
 import sys
 import os
 import argparse
+import shutil
 from astropy.io import fits
 
 def calcrms(arra):
@@ -25,6 +26,13 @@ def max_min(arra):
 
 def snr(arra):
     return np.max(arra)/calcrms(arra)
+
+def copy_images(pth, run):
+    if os.path.isdir(pth+'IMAGES'):
+        pass
+    else:
+        os.mkdir(pth+'IMAGES')
+    shutil.copyfile(pth+run+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(run))
 
 def rebuild_dirlist(dirlist):
     '''
