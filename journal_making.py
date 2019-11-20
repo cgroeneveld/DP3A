@@ -24,3 +24,4 @@ def parse_call(fname, call):
 def yield_last_call(fname):
     fl = h5py.File(fname, 'r')
     calllist = list(fl['Reduction calls'])
+
