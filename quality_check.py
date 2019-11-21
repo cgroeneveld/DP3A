@@ -49,11 +49,12 @@ def rebuild_dirlist(dirlist):
     return ['init'] + rebuild_pcals + rebuild_apcals
 
 def plotter(text, x, y, path):
-    fig,ax = plt.subplots()
+    fig,ax = plt.subplots(figsize = (10,7))
     ax.plot(y)
-    ax.set_xticklabels(['..']+x)
-    fig.suptitle(text)
-    fig.savefig(path, format = 'pdf')
+    ax.set_xticks(np.arange(len(y)))
+    ax.set_xticklabels(x, rotation = 30, ha = 'right')
+    fig.suptitle(text, y = 0.92, size = 16)
+    fig.savefig(path, format = 'pdf', bbox_inches = 'tight')
 
 
 if __name__ == "__main__":
@@ -71,6 +72,7 @@ if __name__ == "__main__":
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))
+        copy_images(parsed.p, run)
     
     plotter('RMS', dirlist, rms, parsed.p+'rms.pdf')
     plotter('I_max/I_min', dirlist, maxmin, parsed.p+'maxmin.pdf')
