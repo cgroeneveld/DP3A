@@ -4,12 +4,17 @@ import sys
 import os
 import argparse
 import subprocess
+import journal_pickling as jp
 
 def writetofile(x, shell):
     with open('kittens.fl' , 'a') as handle:
         handle.write(x+'\n')
 
 # subprocess.call = lambda x,shell: writetofile(x,shell)
+
+def pickle_and_call(x,locker):
+    locker.add_calls(x)
+    subprocess.call(x, shell = True)
 
 def init_directories(fpath, Np, Na):
     try:
@@ -50,27 +55,32 @@ def parse_pset(fname):
             newdata.append(''.join(list(filter(lambda y: y != ' ', x))))
     return newdata
 
-def run_losoto(fpath, ms, n):
+def run_losoto(fpath, ms, n, log, type_ = 'p'):
     # Losoto is always a problem because it demands a parset.
     # Well, then we give it a parset.
     with open('lst.pset', 'r') as handle:
         data = [line for line in handle]
-    if n == 0:
+    if n == 0 and type_ == 'p':
         data[-1] = 'prefix = {0}/init/'.format(fpath)
+    elif type_ == 'ap':
+        data[-1] = 'prefix = {0]}/apcal{1}'.format(fpath, n)
     else:
         data[-1] = 'prefix = {0}/pcal{1}/'.format(fpath,n)
     os.remove('lst.pset')
     with open('lst.pset', 'w') as handle:
         for line in data:
             handle.write(line)
-    if n ==0:
-        subprocess.call('losoto {0}/instrument.h5 lst.pset'.format(ms), shell = True)
+    if n ==0 and type_ == 'p':
+        pickle_and_call('losoto {0}/instrument.h5 lst.pset'.format(ms), log)
+    elif type_ == 'ap':
+        pickle_and_call('losoto {0}/instrument_p{1}.h5 lst.pset'.format(ms, n), log)
+        pickle_and_call('losoto {0}/instrument_a{1}.h5 lst.pset'.format(ms, n), log)
     else:
-        subprocess.call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n), shell=True)
+        pickle_and_call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n), log)
 
 
 
-def run_phase(ddecal, acal, imaging, n, ms, fpath):
+def run_phase(ddecal, acal, imaging, n, ms, fpath,log):
     if n == 0:
         # First iteration
         ddecal.append('ddecal.h5parm={0}/instrument.h5'.format(ms))
@@ -89,12 +99,13 @@ def run_phase(ddecal, acal, imaging, n, ms, fpath):
     acal.append('msout.datacolumn=CORRECTED_DATA')
     fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
-    subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell=True)
-    subprocess.call('DPPP {}'.format(' '.join(acal)), shell=True)
-    subprocess.call(fulimg, shell=True)
-    run_losoto(fpath, ms, n)
+    pickle_and_call('DPPP {}'.format(' '.join(ddecal)), log)
+    pickle_and_call('DPPP {}'.format(' '.join(acal)), log)
+    pickle_and_call(fulimg, log)
 
-def run_amp(ddecal, acal, ddeamp, aamp, imaging, n, ms, fpath):
+    run_losoto(fpath, ms, n, log, type_ = 'p')
+
+def run_amp(ddecal, acal, ddeamp, aamp, imaging, n, ms, fpath, log):
     ddecal.append('ddecal.h5parm={0}/instrument_p{1}.h5'.format(ms, n))
     acal.append('applycal.parmdb={0}/instrument_p{1}.h5'.format(ms, n))
     ddecal.append('msin={0}'.format(ms))
@@ -115,12 +126,13 @@ def run_amp(ddecal, acal, ddeamp, aamp, imaging, n, ms, fpath):
     imname = 'apcal{0}'.format(n)
     fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
-    subprocess.call('DPPP {}'.format(' '.join(ddecal)), shell = True)
-    subprocess.call('DPPP {}'.format(' '.join(acal)), shell = True)
-    subprocess.call('DPPP {}'.format(' '.join(ddeamp)), shell = True)
-    subprocess.call('DPPP {}'.format(' '.join(aamp)), shell = True)
-    subprocess.call(fulimg, shell = True)
-    run_losoto(fpath,ms,n)
+    pickle_and_call('DPPP {}'.format(' '.join(ddecal)), log)
+    pickle_and_call('DPPP {}'.format(' '.join(acal)), log)
+    pickle_and_call('DPPP {}'.format(' '.join(ddeamp)), log)
+    pickle_and_call('DPPP {}'.format(' '.join(aamp)), log)
+    pickle_and_call(fulimg, log)
+
+    run_losoto(fpath,ms,n, log, type_ = 'ap')
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='An automation script')
@@ -132,6 +144,8 @@ if __name__=="__main__":
     parser.add_argument('-ia', type = int, help = "Label of first amp self calibration", default = 0)
 
     parsed = parser.parse_args()
+
+    locker = jp.Locker(parsed.p+'/log')
 
     init_directories(parsed.p, parsed.Np, parsed.Na)
 
@@ -145,9 +159,11 @@ if __name__=="__main__":
     if parsed.Np != 0:
         for n in range(parsed.ip, parsed.Np):
             imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA'
-            run_phase(ddecal, acal, imaging, n, parsed.f, parsed.p)
+            run_phase(ddecal, acal, imaging, n, parsed.f, parsed.p,locker)
     
     if parsed.Na != 0:
         for n in range(parsed.ia, parsed.Na):
             imaging = base_image.rstrip('\n') + ' -data-column CORRECTED_DATA2'
-            run_amp(ddecal, acal, ddeamp, aamp, imaging, n, parsed.f, parsed.p)
+            run_amp(ddecal, acal, ddeamp, aamp, imaging, n, parsed.f, parsed.p, locker)
+
+    locker.save()

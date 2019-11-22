@@ -6,6 +6,7 @@ import numpy as np
 import sys
 import os
 import argparse
+import journal_pickling as jp
 import shutil
 from astropy.io import fits
 
@@ -22,7 +23,7 @@ def calcrms(arra):
     return np.sqrt(np.mean(selected**2))
 
 def max_min(arra):
-    return np.max(arra)/np.min(arra)
+    return np.max(arra)/np.abs(np.min(arra))
 
 def snr(arra):
     return np.max(arra)/calcrms(arra)
@@ -62,6 +63,9 @@ if __name__ == "__main__":
     parser.add_argument('-p', type = str, help = "Path to the location of the core run")
 
     parsed = parser.parse_args()
+    
+    logger = jp.Locker(parsed.p+'/log')
+    logger.add_calls('quality_check')
 
     dirlist = rebuild_dirlist(os.listdir(parsed.p))
     rms = []
@@ -74,6 +78,12 @@ if __name__ == "__main__":
         snrs.append(snr(data))
         copy_images(parsed.p, run)
     
+    logger.rms = rms
+    logger.maxmin = maxmin
+    logger.snrs = snrs
+
     plotter('RMS', dirlist, rms, parsed.p+'rms.pdf')
     plotter('I_max/I_min', dirlist, maxmin, parsed.p+'maxmin.pdf')
     plotter('Signal to noise (max/rms)', dirlist, snrs, parsed.p+'snr.pdf')
+
+    logger.save()
