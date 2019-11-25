@@ -63,7 +63,7 @@ def run_losoto(fpath, ms, n, log, type_ = 'p'):
     if n == 0 and type_ == 'p':
         data[-1] = 'prefix = {0}/init/'.format(fpath)
     elif type_ == 'ap':
-        data[-1] = 'prefix = {0]}/apcal{1}'.format(fpath, n)
+        data[-1] = 'prefix = {0}/apcal{1}/'.format(fpath, n)
     else:
         data[-1] = 'prefix = {0}/pcal{1}/'.format(fpath,n)
     os.remove('lst.pset')
