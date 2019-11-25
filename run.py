@@ -55,29 +55,40 @@ def parse_pset(fname):
             newdata.append(''.join(list(filter(lambda y: y != ' ', x))))
     return newdata
 
-def run_losoto(fpath, ms, n, log, type_ = 'p'):
-    # Losoto is always a problem because it demands a parset.
-    # Well, then we give it a parset.
-    with open('lst.pset', 'r') as handle:
-        data = [line for line in handle]
-    if n == 0 and type_ == 'p':
-        data[-1] = 'prefix = {0}/init/'.format(fpath)
+def parse_losoto_pset(fpath, n, type_ = 'p'):
+    if type_ == 'p':
+        with open('lstp.pset', 'r') as handle:
+            data = [line for line in handle]
+        os.remove('lstp.pset')
+        if n == 0:
+            data[-1] = 'prefix = {0}/init/'.format(fpath)
+        else:
+            data[-1] = 'prefix = {0}/pcal{1}/'.format(fpath,n)
+        with open('lstp.pset', 'w') as handle:
+            for line in data:
+                handle.write(line)
     elif type_ == 'ap':
-        data[-1] = 'prefix = {0}/apcal{1}/'.format(fpath, n)
-    else:
-        data[-1] = 'prefix = {0}/pcal{1}/'.format(fpath,n)
-    os.remove('lst.pset')
-    with open('lst.pset', 'w') as handle:
-        for line in data:
-            handle.write(line)
-    if n ==0 and type_ == 'p':
-        pickle_and_call('losoto {0}/instrument.h5 lst.pset'.format(ms), log)
-    elif type_ == 'ap':
-        pickle_and_call('losoto {0}/instrument_p{1}.h5 lst.pset'.format(ms, n), log)
-        pickle_and_call('losoto {0}/instrument_a{1}.h5 lst.pset'.format(ms, n), log)
-    else:
-        pickle_and_call('losoto {0}/instrument_{1}.h5 lst.pset'.format(ms,n), log)
+        with open('lsta.pset', 'r') as handle:
+            data = [line for line in handle]
+        os.remove('lsta.pset')
+        data[-1] = 'prefix = {0}/apcal{1}/amp_'.format(fpath,n)
+        with open('lsta.pset', 'w') as handle:
+            for line in data:
+                handle.write(line)
 
+def run_losoto(fpath, ms, n, log, type_ = 'p'):
+    if type_ == 'p':
+        parse_losoto_pset(fpath, n, 'p')
+        if n == 0:
+            pickle_and_call('losoto {0}/instrument.h5 lstp.pset'.format(ms), log)
+        else:
+            pickle_and_call('losoto {0}/instrument_{1}.h5 lstp.pset'.format(ms, n), log)
+    elif type_ == 'ap':
+        parse_losoto_pset(fpath, n, 'p')
+        parse_losoto_pset(fpath, n, 'ap')
+        pickle_and_call('losoto {0}/instrument_p{1}.h5 lstp.pset'.format(ms, n), log)
+        pickle_and_call('losoto {0}/instrument_a{1}.h5 lsta.pset'.format(ms, n), log)
+    
 
 
 def run_phase(ddecal, acal, imaging, n, ms, fpath,log):
