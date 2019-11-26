@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 import subprocess
-import ../journal_pickling as jp
+import journal_pickling as jp
 import tools
 
 class PhaseCalibrator(object):
@@ -21,6 +21,7 @@ class PhaseCalibrator(object):
     
     def initialize(self):
         self._init_parsets()
+        self._init_img()
         self.initialized = True
 
     def _init_losoto(self):
@@ -34,10 +35,10 @@ class PhaseCalibrator(object):
         os.remove(self.pset_loc + 'lstp.pset')
         if self.n == 0:
             data[-1] = 'prefix = {0}init/'.format(self.fpath)
-            self`.losoto = 'losoto {0}instrument.h5 lstp.pset'.format(ms)
+            self.losoto = 'losoto {0}instrument.h5 lstp.pset'.format(self.ms)
         else:
             data[-1] = 'prefix = {0}pcal{1}/'.format(self.fpath, self.n)
-            self.losoto = 'losoto {0}instrument_{1}.h5 lstp.pset'.format(ms)
+            self.losoto = 'losoto {0}instrument_{1}.h5 lstp.pset'.format(self.ms, self.n)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
@@ -58,8 +59,8 @@ class PhaseCalibrator(object):
         self.acal = ' '.join(acal)
 
     def _init_img(self):
-        with open(self.pset_loc+'imaging.sh'):
-            base_image = handle.read()
+        with open(self.pset_loc+'imaging.sh') as handle:
+            base_image = handle.read()[:-2]
         if self.n == 0:
             imname = 'init'
         else:
@@ -77,11 +78,11 @@ class PhaseCalibrator(object):
             Basically prints all commands, without running it
         '''
         with open('kittens.fl', 'a') as handle:
-            handle.write('DPPP {}'.format(self.ddecal))
-            handle.write('DPPP {}'.format(self.acal))
-            handle.write(self.fulimg)
+            handle.write('DPPP {}\n'.format(self.ddecal))
+            handle.write('DPPP {}\n'.format(self.acal))
+            handle.write(self.fulimg+'\n')
             self._init_losoto()
-            handle.write(self.losoto)
+            handle.write(self.losoto+'\n')
 
     def _actualrun(self):
         self.pickle_and_call('DPPP {}'.format(self.ddecal))
