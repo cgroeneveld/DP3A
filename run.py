@@ -10,11 +10,12 @@ def writetofile(x, shell):
     with open('kittens.fl' , 'a') as handle:
         handle.write(x+'\n')
 
-# subprocess.call = lambda x,shell: writetofile(x,shell)
+subprocess.call = lambda x,shell: writetofile(x,shell)
 
 def pickle_and_call(x,locker):
     locker.add_calls(x)
     subprocess.call(x, shell = True)
+    locker.save()
 
 def init_directories(fpath, Np, Na):
     try:
@@ -80,35 +81,35 @@ def run_losoto(fpath, ms, n, log, type_ = 'p'):
     if type_ == 'p':
         parse_losoto_pset(fpath, n, 'p')
         if n == 0:
-            pickle_and_call('losoto {0}/instrument.h5 lstp.pset'.format(ms), log)
+            pickle_and_call('losoto {0}instrument.h5 lstp.pset'.format(ms), log)
         else:
-            pickle_and_call('losoto {0}/instrument_{1}.h5 lstp.pset'.format(ms, n), log)
+            pickle_and_call('losoto {0}instrument_{1}.h5 lstp.pset'.format(ms, n), log)
     elif type_ == 'ap':
         parse_losoto_pset(fpath, n, 'p')
         parse_losoto_pset(fpath, n, 'ap')
-        pickle_and_call('losoto {0}/instrument_p{1}.h5 lstp.pset'.format(ms, n), log)
-        pickle_and_call('losoto {0}/instrument_a{1}.h5 lsta.pset'.format(ms, n), log)
+        pickle_and_call('losoto {0}instrument_p{1}.h5 lstp.pset'.format(ms, n), log)
+        pickle_and_call('losoto {0}instrument_a{1}.h5 lsta.pset'.format(ms, n), log)
     
 
 
 def run_phase(ddecal, acal, imaging, n, ms, fpath,log):
     if n == 0:
         # First iteration
-        ddecal.append('ddecal.h5parm={0}/instrument.h5'.format(ms))
-        acal.append('applycal.parmdb={0}/instrument.h5'.format(ms))
+        ddecal.append('ddecal.h5parm={0}instrument.h5'.format(ms))
+        acal.append('applycal.parmdb={0}instrument.h5'.format(ms))
         ddecal.append('msin={0}'.format(ms))
         acal.append('msin={0}'.format(ms))
         imname = 'init'
     else:
-        ddecal.append('ddecal.h5parm={0}/instrument_{1}.h5'.format(ms, n))
-        acal.append('applycal.parmdb={0}/instrument_{1}.h5'.format(ms, n))
+        ddecal.append('ddecal.h5parm={0}instrument_{1}.h5'.format(ms, n))
+        acal.append('applycal.parmdb={0}instrument_{1}.h5'.format(ms, n))
         ddecal.append('msin={0}'.format(ms))
         acal.append('msin={0}'.format(ms))
         imname = 'pcal{0}'.format(n)
 
     ddecal.append('msout.datacolumn=CORRECTED_DATA')    
     acal.append('msout.datacolumn=CORRECTED_DATA')
-    fulimg = '{0} -name {1}/{2}/ws {3}'.format(imaging, fpath, imname, ms)
+    fulimg = '{0} -name {1}{2}/ws {3}'.format(imaging, fpath, imname, ms)
 
     pickle_and_call('DPPP {}'.format(' '.join(ddecal)), log)
     pickle_and_call('DPPP {}'.format(' '.join(acal)), log)
