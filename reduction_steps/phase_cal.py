@@ -21,8 +21,15 @@ class PhaseCalibrator(object):
     
     def initialize(self):
         self._init_parsets()
+        self._init_dir()
         self._init_img()
         self.initialized = True
+
+    def _init_dir(self):
+        if self.n == 0:
+            os.mkdir('{0}init'.format(self.fpath))
+        else:
+            os.mkdir('{0}pcal{1}'.format(self.fpath,self.n))
 
     def _init_losoto(self):
         '''
