@@ -58,7 +58,7 @@ def plotter(text, x, y, path):
     fig.savefig(path, format = 'pdf', bbox_inches = 'tight')
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description = "Measures the quality improvement over time for a certain run")
     parser.add_argument('-p', type = str, help = "Path to the location of the core run")
 
@@ -87,3 +87,6 @@ if __name__ == "__main__":
     plotter('Signal to noise (max/rms)', dirlist, snrs, parsed.p+'snr.pdf')
 
     logger.save()
+
+if __name__ == "__main__":
+    main()

@@ -7,6 +7,7 @@ import subprocess
 import journal_pickling as jp
 import reduction_steps.diag_cal as dc
 import reduction_steps.phase_cal as pc
+import quality_check as qc
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='An automation script')
@@ -18,11 +19,15 @@ if __name__=="__main__":
     parser.add_argument('-id', type = int, help = "Label of first diagonal self calibration", default = 1)
 
     parsed = parser.parse_args()
+    fpath = parsed.p
+    ms = parsed.ms
 
     # TODO: FORMAT IT TO WORK WITH THE CLASSES:w
 
     for i in range(parsed.ip, parsed.ip + parsed.Np):
-        print('p{}'.format(i))
+        pc.PhaseCalibrator(i, ms, fpath, './')
     
     for i in range(parsed.id, parsed.id + parsed.Nd):
-        print('d{}'.format(i))
+        dc.DiagonalCalibrator(i, ms, fpath, './')
+    
+    qc.main()
