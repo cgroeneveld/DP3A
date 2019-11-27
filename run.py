@@ -22,7 +22,7 @@ if __name__=="__main__":
     # TODO: FORMAT IT TO WORK WITH THE CLASSES:w
 
     for i in range(parsed.ip, parsed.ip + parsed.Np):
-        print('p{}\n'.format(i))
+        print('p{}'.format(i))
     
-    for i in range(parsed.ia, parsed.ia + parsed.Na):
-        print('d{}\n'.format(i))
+    for i in range(parsed.id, parsed.id + parsed.Nd):
+        print('d{}'.format(i))
