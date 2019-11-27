@@ -4,7 +4,7 @@ import sys
 import os
 import subprocess
 import journal_pickling as jp
-import tools
+from .tools import parse_pset
 
 class DiagonalCalibrator(object):
     def __init__(self, n, ms, fpath, pset_loc = './'):
