@@ -12,6 +12,7 @@ class Locker(object):
         else:
             self.reduction_calls = []
             self.ncalls = 0
+            self.attrs = {}
         
     def add_calls(self, call):
         self.reduction_calls.append((datetime.datetime.today(), call))
@@ -28,4 +29,10 @@ class Locker(object):
         with open(self.fname, 'rb') as fl:
             tempdict = pickle.load(fl)
             self.__dict__.update(tempdict)
+    
+    def __getitem__(self, name):
+        return self.attrs[name]
+    
+    def __setitem__(self, name, data):
+        self.attrs[name] = data
     
