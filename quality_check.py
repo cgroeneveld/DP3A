@@ -43,11 +43,15 @@ def rebuild_dirlist(dirlist):
     '''
     apcals = list(filter(lambda x: 'apcal' in x, dirlist))
     pcals = list(filter(lambda x: 'pcal' in x and 'apcal' not in x, dirlist))
+    is_init = len(list(filter(lambda x: 'init' in x, dirlist))) == 1
     numbs_pcal = np.array([int(pcal[4:]) for pcal in pcals])
     numbs_apcal = np.array([int(apcal[5:]) for apcal in apcals])
     rebuild_pcals = ['pcal'+str(num) for num in np.sort(numbs_pcal)]
     rebuild_apcals = ['apcal'+str(num) for num in np.sort(numbs_apcal)]
-    return ['init'] + rebuild_pcals + rebuild_apcals
+    if is_init:
+        return ['init'] + rebuild_pcals + rebuild_apcals
+    else:
+        return rebuild_pcals + rebuild_apcals
 
 def plotter(text, x, y, path):
     fig,ax = plt.subplots(figsize = (10,7))
@@ -58,35 +62,30 @@ def plotter(text, x, y, path):
     fig.savefig(path, format = 'pdf', bbox_inches = 'tight')
 
 
-def main():
-    parser = argparse.ArgumentParser(description = "Measures the quality improvement over time for a certain run")
-    parser.add_argument('-p', type = str, help = "Path to the location of the core run")
-
-    parsed = parser.parse_args()
-    
-    logger = jp.Locker(parsed.p+'/log')
+def main(fpath):
+    logger = jp.Locker(fpath+'log')
     logger.add_calls('quality_check')
 
-    dirlist = rebuild_dirlist(os.listdir(parsed.p))
+    dirlist = rebuild_dirlist(os.listdir(fpath))
     rms = []
     maxmin = []
     snrs = []
     for run in dirlist:
-        data = fits.getdata(parsed.p+run+'/ws-image.fits')[0,0,:,:]
+        data = fits.getdata(fpath+run+'/ws-image.fits')[0,0,:,:]
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))
-        copy_images(parsed.p, run)
+        copy_images(fpath, run)
     
     logger.rms = rms
     logger.maxmin = maxmin
     logger.snrs = snrs
 
-    plotter('RMS', dirlist, rms, parsed.p+'rms.pdf')
-    plotter('I_max/I_min', dirlist, maxmin, parsed.p+'maxmin.pdf')
-    plotter('Signal to noise (max/rms)', dirlist, snrs, parsed.p+'snr.pdf')
+    plotter('RMS', dirlist, rms, fpath+'rms.pdf')
+    plotter('I_max/I_min', dirlist, maxmin, fpath+'maxmin.pdf')
+    plotter('Signal to noise (max/rms)', dirlist, snrs, fpath+'snr.pdf')
 
     logger.save()
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

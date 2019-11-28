@@ -14,7 +14,7 @@ class PhaseCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -51,8 +51,8 @@ class PhaseCalibrator(object):
                 handle.write(line)
     
     def _init_parsets(self):
-        ddecal = tools.parse_pset(self.pset_loc + 'ddecal_init.pset')
-        acal = tools.parse_pset(self.pset_loc + 'acal_init.pset')
+        ddecal = parse_pset(self.pset_loc + 'ddecal_init.pset')
+        acal = parse_pset(self.pset_loc + 'acal_init.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
 

@@ -14,7 +14,7 @@ class DiagonalCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -54,8 +54,8 @@ class DiagonalCalibrator(object):
                 handle.write(line)
 
     def _init_parsets(self):
-        ddecal = tools.parse_pset(self.pset_loc + 'ddecal_init.pset')
-        acal = tools.parse_pset(self.pset_loc + 'acal_init.pset')
+        ddecal = parse_pset(self.pset_loc + 'ddecal_init.pset')
+        acal = parse_pset(self.pset_loc + 'acal_init.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
         ddecal.append('ddecal.h5parm={0}instrument_p{1}.h5'.format(self.ms,self.n))
@@ -65,8 +65,8 @@ class DiagonalCalibrator(object):
         self.ddephase = ' '.join(ddecal)
         self.aphase = ' '.join(acal)
 
-        ddeamp = tools.parse_pset(self.pset_loc + 'ddecal_ampself.pset')
-        aamp = tools.parse_pset(self.pset_loc + 'acal_ampself.pset')
+        ddeamp = parse_pset(self.pset_loc + 'ddecal_ampself.pset')
+        aamp = parse_pset(self.pset_loc + 'acal_ampself.pset')
         ddeamp.append('msin={}'.format(self.ms))
         aamp.append('msin={}'.format(self.ms))
         ddeamp.append('ddecal.h5parm={0}instrument_a{1}.h5'.format(self.ms, self.n))
@@ -84,8 +84,8 @@ class DiagonalCalibrator(object):
         if self.n == 0:
             imname = 'init'
         else:
-            imname = 'pcal{}'.format(self.n)
-        self.fulimg = '{0} -data-column=CORRECTED_DATA2 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+            imname = 'apcal{}'.format(self.n)
+        self.fulimg = '{0} -data-column CORRECTED_DATA2 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
     
     def pickle_and_call(self,x):
         self.log.add_calls(x)
