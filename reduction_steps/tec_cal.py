@@ -14,7 +14,7 @@ class TecCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True 
+        self.DEBUG = False 
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -34,12 +34,12 @@ class TecCalibrator(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
-        with open(self.pset_loc + 'lstp.pset', 'r') as handle:
+        with open(self.pset_loc + 'lsta.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
+        os.remove(self.pset_loc + 'lsta.pset')
         data[-1] = 'prefix = {0}teccal{1}/'.format(self.fpath, self.n)
-        self.losoto = 'losoto {0}instrument_t{1}.h5 lstp.pset'.format(self.ms, self.n)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+        self.losoto = 'losoto {0}instrument_t{1}.h5 lsta.pset'.format(self.ms, self.n)
+        with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
     
@@ -57,7 +57,7 @@ class TecCalibrator(object):
     def _init_img(self):
         with open(self.pset_loc+'imaging.sh') as handle:
             base_image = handle.read()[:-2]
-        imname = 'pcal{}'.format(self.n)
+        imname = 'teccal{}'.format(self.n)
         self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
 
     def pickle_and_call(self,x):

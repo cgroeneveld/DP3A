@@ -43,15 +43,19 @@ def rebuild_dirlist(dirlist):
     '''
     apcals = list(filter(lambda x: 'apcal' in x, dirlist))
     pcals = list(filter(lambda x: 'pcal' in x and 'apcal' not in x, dirlist))
+    teccals = list(filter(lambda x: 'teccal' in x, dirlist))
     is_init = len(list(filter(lambda x: 'init' in x, dirlist))) == 1
     numbs_pcal = np.array([int(pcal[4:]) for pcal in pcals])
     numbs_apcal = np.array([int(apcal[5:]) for apcal in apcals])
+    numbs_teccal = np.array([int(teccal[6:]) for teccal in teccals])
     rebuild_pcals = ['pcal'+str(num) for num in np.sort(numbs_pcal)]
     rebuild_apcals = ['apcal'+str(num) for num in np.sort(numbs_apcal)]
+    rebuild_teccals = ['teccal'+str(num) for num in np.sort(numbs_teccal)]
     if is_init:
-        return ['init'] + rebuild_pcals + rebuild_apcals
+        # this is actually obsolete
+        return ['init'] + rebuild_pcals + rebuild_apcals + rebuild_teccals
     else:
-        return rebuild_pcals + rebuild_apcals
+        return rebuild_pcals + rebuild_apcals + rebuild_teccals
 
 def plotter(text, x, y, path):
     fig,ax = plt.subplots(figsize = (10,7))

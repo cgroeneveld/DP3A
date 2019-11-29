@@ -35,7 +35,6 @@ for chara in uni_redsteps:
     mask = chara == np.asarray(redsteps)
     nlist[mask] = np.arange(1, int(1+sum(mask)))
 
-
 for red, n in zip(redsteps, nlist):
     n = int(n)
     if red == 'p':
