@@ -8,28 +8,45 @@ import subprocess
 import journal_pickling as jp
 import reduction_steps.diag_cal as dc
 import reduction_steps.phase_cal as pc
+import reduction_steps.tec_cal as tc
 import datetime
 import quality_check as qc
 
 parser = argparse.ArgumentParser(description='An automation script')
-parser.add_argument('-Np', type = int, help = "Amount of self calibration cycles it needs to perform", default = 0)
-parser.add_argument('-Nd', type = int, help = "Amount of self calibration (amplitude) cycles it needs to perform", default = 0)
 parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
 parser.add_argument('-ms', type = str, help = "Location of measurement set", required = True)
-parser.add_argument('-ip', type = int, help = "Label of first self calibration", default = 0)
-parser.add_argument('-id', type = int, help = "Label of first diagonal self calibration", default = 1)
+parser.add_argument('-s', type = str, help = "String representing the reduction steps. Use h for more help", required = True)
 
 parsed = parser.parse_args()
 
-for i in range(parsed.ip, parsed.ip + parsed.Np):
-    phasecal = pc.PhaseCalibrator(i, parsed.ms,parsed.p, './')
-    phasecal.initialize()
-    phasecal.execute()
+if parsed.s == 'h':
+    print('''
+        The following reduction steps have (so far) been implemented:
+        p  |   Phase only calibration
+        d  |   Diagonal calibration, meaning one phase and one diagonal calibration
+        t  |   TEC calibration for the ionosphere, basically a constraint on the
+           |   phase-only calibration
+    ''')
 
-for i in range(parsed.id, parsed.id + parsed.Nd):
-    diagcal = dc.DiagonalCalibrator(i, parsed.ms, parsed.p, './')
-    diagcal.initialize()
-    diagcal.execute()
+redsteps = list(parsed.s)
+uni_redsteps = np.unique(redsteps)
+nlist = np.zeros(len(redsteps))
+for chara in uni_redsteps: 
+    mask = chara == np.asarray(redsteps)
+    nlist[mask] = np.arange(sum(mask))
+
+for red, n in zip(redsteps, nlist):
+    if red == 'p':
+        cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './')
+    elif red == 'd':
+        cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './')
+    elif red == 't':
+        cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './')
+    else:
+        print("Reduction step {} not implemented".format(red))
+    cal.initialize()
+    cal.execute()
+
 
 qc.main(parsed.p)
 

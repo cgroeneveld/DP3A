@@ -6,7 +6,7 @@ import subprocess
 import journal_pickling as jp
 from .tools import parse_pset
 
-class PhaseCalibrator(object):
+class TecCalibrator(object):
     def __init__(self, n, ms, fpath, pset_loc = './'):
         self.n = n
         self.ms = ms
