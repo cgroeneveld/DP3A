@@ -14,7 +14,7 @@ class DiagonalCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = False
+        self.DEBUG = True
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'

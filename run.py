@@ -33,9 +33,11 @@ uni_redsteps = np.unique(redsteps)
 nlist = np.zeros(len(redsteps))
 for chara in uni_redsteps: 
     mask = chara == np.asarray(redsteps)
-    nlist[mask] = np.arange(sum(mask))
+    nlist[mask] = np.arange(1, int(1+sum(mask)))
+
 
 for red, n in zip(redsteps, nlist):
+    n = int(n)
     if red == 'p':
         cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './')
     elif red == 'd':
