@@ -49,7 +49,7 @@ for red, n in zip(redsteps, nlist):
     cal.execute()
 
 
-qc.main(parsed.p)
+qc.main(parsed.p, redsteps, nlist)
 
 log = jp.Locker(parsed.p + 'log')
 log['ms'] = parsed.ms
