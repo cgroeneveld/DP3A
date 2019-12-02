@@ -48,7 +48,6 @@ for red, n in zip(redsteps, nlist):
     cal.initialize()
     cal.execute()
 
-
 qc.main(parsed.p, redsteps, nlist)
 
 log = jp.Locker(parsed.p + 'log')
