@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser(description='An automation script')
 parser.add_argument('-p', type = str, help = "Path to where we can write the images and solution plots", default = './RESULTS/')
 parser.add_argument('-ms', type = str, help = "Location of measurement set", required = True)
 parser.add_argument('-s', type = str, help = "String representing the reduction steps. Use h for more help", required = True)
+parser.add_argument('-d', action = 'store_true', help = 'Enables debug mode')
 
 parsed = parser.parse_args()
 
@@ -45,6 +46,8 @@ for red, n in zip(redsteps, nlist):
         cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './')
     else:
         print("Reduction step {} not implemented".format(red))
+    if parsed.d:
+        cal.DEBUG = True
     cal.initialize()
     cal.execute()
 
