@@ -9,6 +9,7 @@ import journal_pickling as jp
 import reduction_steps.diag_cal as dc
 import reduction_steps.phase_cal as pc
 import reduction_steps.tec_cal as tc
+import reduction_steps.phase_up as pu
 import datetime
 import quality_check as qc
 
@@ -27,6 +28,7 @@ if parsed.s == 'h':
         d  |   Diagonal calibration, meaning one phase and one diagonal calibration
         t  |   TEC calibration for the ionosphere, basically a constraint on the
            |   phase-only calibration
+        u  |   Phase-up: mash all short baselines together to one single base station
     ''')
 
 redsteps = list(parsed.s)
@@ -36,6 +38,12 @@ for chara in uni_redsteps:
     mask = chara == np.asarray(redsteps)
     nlist[mask] = np.arange(1, int(1+sum(mask)))
 
+if 'u' in redsteps:
+    print("This reduction strings contains a phase-up. Phase-ups are destructive - so please make sure that you have backed your system up. Type 'ok' to continue: ")
+    ans = input()
+    if ans != 'ok':
+        sys.exit()
+
 for red, n in zip(redsteps, nlist):
     n = int(n)
     if red == 'p':
@@ -44,6 +52,8 @@ for red, n in zip(redsteps, nlist):
         cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './')
     elif red == 't':
         cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './')
+    elif red == 'u':
+        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './')
     else:
         print("Reduction step {} not implemented".format(red))
     if parsed.d:
