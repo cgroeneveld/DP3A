@@ -14,7 +14,7 @@ class PhaseUp(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -25,9 +25,9 @@ class PhaseUp(object):
         self.initialized = True
     
     def _init_parsets(self):
-        ddecal = parse_pset(self.pset_loc + 'ddecal_init.pset')
+        ddecal = parse_pset(self.pset_loc + 'phaseup.pset')
         ddecal.append('msin={}'.format(self.ms))
-        ddecal.append('msout={}_pu'.format(self.ms))
+        ddecal.append('msout={}_pu/'.format(self.ms[:-1]))
         self.ddecal = ' '.join(ddecal)
 
     def pickle_and_call(self,x):
@@ -37,7 +37,8 @@ class PhaseUp(object):
 
     def fix_folders(self):
         shu.rmtree(self.ms)
-        shu.copytree('{}_pu'.format(self.ms), self.ms)
+        shu.copytree('{}_pu/'.format(self.ms[:-1]), self.ms)
+        shu.rmtree('{}_pu/'.format(self.ms[:-1]))
 
    
     def _printrun(self):

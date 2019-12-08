@@ -40,11 +40,11 @@ for chara in uni_redsteps:
 
 if 'u' in redsteps:
     print("This reduction strings contains a phase-up. Phase-ups are destructive - so please make sure that you have backed your system up. Type 'ok' to continue: ")
-    ans = input()
+    ans = raw_input()
     if ans != 'ok':
         sys.exit()
 
-for red, n in zip(redsteps, nlist):
+for i, red, n in enumerate(zip(redsteps, nlist)):
     n = int(n)
     if red == 'p':
         cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './')
@@ -53,7 +53,8 @@ for red, n in zip(redsteps, nlist):
     elif red == 't':
         cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './')
     elif red == 'u':
-        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './')
+        prev_iter = '{0}{1}'.format(redsteps[i-1], nlist[i-1])
+        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './',prev_iter)
     else:
         print("Reduction step {} not implemented".format(red))
     if parsed.d:

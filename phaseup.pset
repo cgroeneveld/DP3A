@@ -1,5 +1,5 @@
 numthreads = 50
-
+steps = [adder,filter]
 msin.datacolumn = DATA
 
 msout.writefullresflag = False
@@ -10,5 +10,5 @@ adder.type = stationadder
 adder.stations = {ST001:CS*}
 
 filter.type = filter
-filter.baseline = ^[C]S*&&
+filter.baseline = "^[C]S*&&"
 filter.remove = True

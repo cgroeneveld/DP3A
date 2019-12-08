@@ -7,14 +7,15 @@ import journal_pickling as jp
 from .tools import parse_pset
 
 class PhaseCalibrator(object):
-    def __init__(self, n, ms, fpath, pset_loc = './'):
+    def __init__(self, n, ms, fpath, pset_loc = './',m):
         self.n = n
+        self.m = m
         self.ms = ms
         self.fpath = fpath
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -49,7 +50,14 @@ class PhaseCalibrator(object):
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
-    
+
+    def ws_predict(self):
+        if self.m[0] == 'p':
+            prev_n = 'pcal{}'.format(self.m[1])
+        elif self.m[0] == 't':
+            prev_n = 'teccal{}'.format(self.m[1])
+        self.predict = 'wsclean -predict -name {0} {1}'.format(self.prev_n)
+
     def _init_parsets(self):
         ddecal = parse_pset(self.pset_loc + 'ddecal_init.pset')
         acal = parse_pset(self.pset_loc + 'acal_init.pset')
