@@ -37,7 +37,8 @@ def copy_images(pth, run):
 
 def rebuild_dirlist(redsteps, nlist):
     dirlist = []
-    for n, step in zip(nlist,redsteps):
+    for m, step in zip(nlist,redsteps):
+        n = int(m)
         if step == 't':
             dirlist.append('teccal{}'.format(n))
         elif step == 'd':

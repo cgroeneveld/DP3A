@@ -44,7 +44,9 @@ if 'u' in redsteps:
     if ans != 'ok':
         sys.exit()
 
-for i, red, n in enumerate(zip(redsteps, nlist)):
+for i, a in enumerate(zip(redsteps, nlist)):
+    'I need to emurate a zip, so I use a as a burner variable'
+    red, n = a
     n = int(n)
     if red == 'p':
         cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './')
