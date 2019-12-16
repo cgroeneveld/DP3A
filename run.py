@@ -44,19 +44,16 @@ if 'u' in redsteps:
     if ans != 'ok':
         sys.exit()
 
-for i, a in enumerate(zip(redsteps, nlist)):
-    'I need to emurate a zip, so I use a as a burner variable'
-    red, n = a
+for red, n in zip(redsteps, nlist):
     n = int(n)
     if red == 'p':
-        cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './')
+        cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './parsets/')
     elif red == 'd':
-        cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './')
+        cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './parsets/')
     elif red == 't':
-        cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './')
+        cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './parsets/')
     elif red == 'u':
-        prev_iter = '{0}{1}'.format(redsteps[i-1], nlist[i-1])
-        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './',prev_iter)
+        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/')
     else:
         print("Reduction step {} not implemented".format(red))
     if parsed.d:
