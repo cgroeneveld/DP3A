@@ -1,8 +1,9 @@
 [plot]
 
+soltab = sol000/phase000
 operation = PLOT
 axesinplot = [time]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB10/testrun1/apcal1/amp
+prefix = ../LB10/testrun1/phaseup/

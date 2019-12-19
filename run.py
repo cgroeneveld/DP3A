@@ -18,6 +18,8 @@ parser.add_argument('-p', type = str, help = "Path to where we can write the ima
 parser.add_argument('-ms', type = str, help = "Location of measurement set", required = True)
 parser.add_argument('-s', type = str, help = "String representing the reduction steps. Use h for more help", required = True)
 parser.add_argument('-d', action = 'store_true', help = 'Enables debug mode')
+parser.add_argument('-y', action = 'store_true', help = 'Automatically accept phase-up warning')
+parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
 
 parsed = parser.parse_args()
 
@@ -29,6 +31,12 @@ if parsed.s == 'h':
         t  |   TEC calibration for the ionosphere, basically a constraint on the
            |   phase-only calibration
         u  |   Phase-up: mash all short baselines together to one single base station
+           |   Requires a model.
+        _____________________________________________________________________________
+
+        These have not yet been implemented:
+        r  |   Correction for rotation measure. Important for low frequencies
+        m  |   Predict using a new model - requires a model
     ''')
 
 redsteps = list(parsed.s)
@@ -38,11 +46,14 @@ for chara in uni_redsteps:
     mask = chara == np.asarray(redsteps)
     nlist[mask] = np.arange(1, int(1+sum(mask)))
 
-if 'u' in redsteps:
+if 'u' in redsteps and not parsed.y:
     print("This reduction strings contains a phase-up. Phase-ups are destructive - so please make sure that you have backed your system up. Type 'ok' to continue: ")
     ans = raw_input()
     if ans != 'ok':
         sys.exit()
+
+if 'u' in redsteps or 'm' in redsteps:
+    assert parsed.m != None
 
 for red, n in zip(redsteps, nlist):
     n = int(n)
@@ -53,7 +64,7 @@ for red, n in zip(redsteps, nlist):
     elif red == 't':
         cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './parsets/')
     elif red == 'u':
-        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/')
+        cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/', parsed.m)
     else:
         print("Reduction step {} not implemented".format(red))
     if parsed.d:

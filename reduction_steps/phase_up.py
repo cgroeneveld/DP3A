@@ -9,15 +9,15 @@ import diag_cal as dc
 from losoto import h5parm
 from .tools import parse_pset
 
-# NEED TO FIX THE LOSOTO STUFF
 
 class PhaseUp(object):
-    def __init__(self, n, ms, fpath, pset_loc = './'):
+    def __init__(self, n, ms, fpath, pset_loc = './', predict_path = './model.fits'):
         self.ms = ms
         self.fpath = fpath
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
+        self.predict_path = predict_path
         self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
@@ -27,7 +27,6 @@ class PhaseUp(object):
     def initialize(self):
         self._init_parsets()
         self._init_dir()
-        self._init_img()
         self._init_calibrate()
         self.initialized = True
     
@@ -90,16 +89,6 @@ class PhaseUp(object):
             for line in data:
                 handle.write(line)
 
-    def _init_img(self):
-        '''
-            Get rid of this.
-        '''
-        with open(self.pset_loc+'imaging.sh') as handle:
-            base_image = handle.read()[:-2]
-        self.fulimg1 = '{0} -data-column CORRECTED_PHASE -name {1}phaseup/pha {2}'.format(base_image, self.fpath, self.ms)
-        self.fulimg2 = '{0} -data-column CORRECTED_DATA2 -name {1}phaseup/ws {2}'.format(base_image, self.fpath, self.ms)
-
-
     def pickle_and_call(self,x):
         self.log.add_calls(x)
         subprocess.call(x, shell = True)
@@ -111,9 +100,7 @@ class PhaseUp(object):
         shu.rmtree('{}_pu/'.format(self.ms[:-1]))
 
     def _init_calibrate(self):
-        folder = 'phaseup'
-        predict_path = '{0}{1}/ws'.format(self.fpath, folder)
-        self.predict_call = 'wsclean -predict -name {0} {1}'.format(predict_path, self.ms)
+        self.predict_call = 'wsclean -predict -name {0} {1}'.format(self.predict_path, self.ms)
 
     def fix_h5(self, parmname, also_amp = False):
         '''

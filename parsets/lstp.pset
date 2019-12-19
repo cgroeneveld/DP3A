@@ -5,4 +5,4 @@ axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB10/run1//pcal1/
+prefix = ../LB10/testrun1/pcal1/
