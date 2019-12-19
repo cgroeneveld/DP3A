@@ -110,12 +110,15 @@ class PhaseUp(object):
         phases = H5.getSolset('sol000').getSoltab('phase000').getValues()
         phasevals = phases[0]
         antennas = phases[1]['ant']
-        inter_remote = np.where([not 'CS' in ant for ant in antennas])
+        # Select ids of international, remote and both
+        idx_rem_int = np.where([not 'CS' in ant for ant in antennas])
+        idx_int = np.where([not ('CS' in ant or 'RS' in ant) for ant in antennas])
+        idx_rem = np.where(['RS' in ant for ant in antennas])
         phasevals[:,:,inter_remote,:,:] = 0.0 # Try setting all directions?
         if also_amp:
             ampvals = H5.getSolset('sol000').getSoltab('amplitude000').getValues()[0]
-            # NEED TO MODIFY THIS FOR CORRECT PHASEUP
-            ampvals[:,:,inter_remote,0,:] = 1.0 
+            ampvals[:,:,idx_rem,0,:] = 1.0 
+            ampvals[:,:,idx_int,0,:] = 2.0
             H5.getSolset('sol000').getSoltab('amplitude000').setValues(ampvals)
         H5.getSolset('sol000').getSoltab('phase000').setValues(phasevals)
         H5.close()
