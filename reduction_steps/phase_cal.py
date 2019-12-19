@@ -42,10 +42,10 @@ class PhaseCalibrator(object):
         os.remove(self.pset_loc + 'lstp.pset')
         if self.n == 0:
             data[-1] = 'prefix = {0}init/'.format(self.fpath)
-            self.losoto = 'losoto {0}instrument.h5 lstp.pset'.format(self.ms)
+            self.losoto = 'losoto {0}instrument.h5 {1}lstp.pset'.format(self.ms, self.pset_loc)
         else:
             data[-1] = 'prefix = {0}pcal{1}/'.format(self.fpath, self.n)
-            self.losoto = 'losoto {0}instrument_{1}.h5 lstp.pset'.format(self.ms, self.n)
+            self.losoto = 'losoto {0}instrument_{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)

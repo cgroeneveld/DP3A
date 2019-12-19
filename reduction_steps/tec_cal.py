@@ -38,7 +38,7 @@ class TecCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsta.pset')
         data[-1] = 'prefix = {0}teccal{1}/'.format(self.fpath, self.n)
-        self.losoto = 'losoto {0}instrument_t{1}.h5 lsta.pset'.format(self.ms, self.n)
+        self.losoto = 'losoto {0}instrument_t{1}.h5 {2}lsta.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
                 handle.write(line)

@@ -39,7 +39,7 @@ class DiagonalCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lstp.pset')
         data[-1] = 'prefix = {0}apcal{1}/'.format(self.fpath, self.n)
-        self.losoto_p = 'losoto {0}instrument_p{1}.h5 lstp.pset'.format(self.ms, self.n)
+        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
@@ -48,7 +48,7 @@ class DiagonalCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsta.pset')
         data[-1] = 'prefix = {0}apcal{1}/amp'.format(self.fpath,self.n)
-        self.losoto_a = 'losoto {0}instrument_a{1}.h5 lsta.pset'.format(self.ms, self.n)
+        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}lsta.pset'.format(self.ms, self.n,self.pset_loc)
         with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
                 handle.write(line)

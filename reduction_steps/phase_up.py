@@ -9,6 +9,8 @@ import diag_cal as dc
 from losoto import h5parm
 from .tools import parse_pset
 
+# NEED TO FIX THE LOSOTO STUFF
+
 class PhaseUp(object):
     def __init__(self, n, ms, fpath, pset_loc = './'):
         self.ms = ms
@@ -52,13 +54,13 @@ class PhaseUp(object):
 
         ddecal_diag = parse_pset(self.pset_loc + 'ddecal_ampself.pset')
         ddecal_diag.append('msin={}'.format(self.ms))
-        ddecal_diag.append('ddecal.5hparm={}prephase2.h5'.format(self.ms))
+        ddecal_diag.append('ddecal.h5parm={}prephase2.h5'.format(self.ms))
         ddecal_diag.append('msin.datacolumn=CORRECTED_PHASE')
         ddecal_diag.append('msout.datacolumn=CORRECTED_DATA2')
         self.ddecal_diag = ' '.join(ddecal_diag)
 
         acal_diag = parse_pset(self.pset_loc + 'acal_ampself.pset')
-        acal_diag.append('msin = {}'.format(self.ms))
+        acal_diag.append('msin={}'.format(self.ms))
         acal_diag.append('msin.datacolumn=CORRECTED_PHASE')
         acal_diag.append('msout.datacolumn=CORRECTED_DATA2')
         acal_diag.append('applycal.parmdb={}prephase2.h5'.format(self.ms))
@@ -70,28 +72,32 @@ class PhaseUp(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
-        with open(self.pset_loc + 'lstp.pset', 'r') as handle:
+        with open(self.pset_loc + 'lsupp.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
+        os.remove(self.pset_loc + 'lsupp.pset')
         data[-1] = 'prefix = {0}phaseup/'.format(self.fpath)
-        self.losoto_p = 'losoto {0}prephase2.h5 lstp.pset'.format(self.ms)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+        self.losoto_p = 'losoto {0}prephase2.h5 {1}lsupp.pset'.format(self.ms, self.pset_loc)
+        with open(self.pset_loc + 'lsupp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
 
-        with open(self.pset_loc + 'lsta.pset', 'r') as handle:
+        with open(self.pset_loc + 'lsupa.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lsta.pset')
+        os.remove(self.pset_loc + 'lsupa.pset')
         data[-1] = 'prefix = {0}phaseup/amp'.format(self.fpath)
-        self.losoto_a = 'losoto {0}prephase2.h5 lsta.pset'.format(self.ms)
-        with open(self.pset_loc + 'lsta.pset', 'w') as handle:
+        self.losoto_a = 'losoto {0}prephase2.h5 {1}lsupa.pset'.format(self.ms,self.pset_loc)
+        with open(self.pset_loc + 'lsupa.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
 
     def _init_img(self):
+        '''
+            Get rid of this.
+        '''
         with open(self.pset_loc+'imaging.sh') as handle:
             base_image = handle.read()[:-2]
-        self.fulimg = '{0} -data-column CORRECTED_DATA2 -name {1}prephase/ws {2}'.format(base_image, self.fpath, self.ms)
+        self.fulimg1 = '{0} -data-column CORRECTED_PHASE -name {1}phaseup/pha {2}'.format(base_image, self.fpath, self.ms)
+        self.fulimg2 = '{0} -data-column CORRECTED_DATA2 -name {1}phaseup/ws {2}'.format(base_image, self.fpath, self.ms)
 
 
     def pickle_and_call(self,x):
@@ -105,24 +111,27 @@ class PhaseUp(object):
         shu.rmtree('{}_pu/'.format(self.ms[:-1]))
 
     def _init_calibrate(self):
-        folder = 'prephase'
+        folder = 'phaseup'
         predict_path = '{0}{1}/ws'.format(self.fpath, folder)
         self.predict_call = 'wsclean -predict -name {0} {1}'.format(predict_path, self.ms)
 
     def fix_h5(self, parmname, also_amp = False):
+        '''
+            THIS FUNCTION IS MISBEHAVING
+        '''
         H5 = h5parm.h5parm(self.ms + parmname, readonly = False) 
         phases = H5.getSolset('sol000').getSoltab('phase000').getValues()
         phasevals = phases[0]
         antennas = phases[1]['ant']
         inter_remote = np.where([not 'CS' in ant for ant in antennas])
-        phasevals[:,:,inter_remote,0,:] = 0.0
+        phasevals[:,:,inter_remote,:,:] = 0.0 # Try setting all directions?
         if also_amp:
             ampvals = H5.getSolset('sol000').getSoltab('amplitude000').getValues()[0]
             # NEED TO MODIFY THIS FOR CORRECT PHASEUP
             ampvals[:,:,inter_remote,0,:] = 1.0 
             H5.getSolset('sol000').getSoltab('amplitude000').setValues(ampvals)
         H5.getSolset('sol000').getSoltab('phase000').setValues(phasevals)
-        H5.close(0)
+        H5.close()
 
     def _printrun(self):
         '''
@@ -131,14 +140,15 @@ class PhaseUp(object):
         with open('kittens.fl', 'a') as handle:
             handle.write('DPPP {}\n'.format(self.ddecal2))
             handle.write('DPPP {}\n'.format(self.acal2))
+            handle.write(self.fulimg1+'\n')
             handle.write('DPPP {}\n'.format(self.ddecal_diag))
             handle.write('DPPP {}\n'.format(self.acal_diag))
-            handle.write(self.fulimg)
+            handle.write(self.fulimg2+'\n')
             self._init_losoto()
             handle.write(self.losoto_p+'\n')
-            handle.write(self.losoto_a)
+            handle.write(self.losoto_a+'\n')
             handle.write('DPPP {}\n'.format(self.ddecal_pu))
-            handle.write(self.predict_call)
+            handle.write(self.predict_call+'\n')
 
     def _actualrun(self):
         self.pickle_and_call('DPPP {}'.format(self.ddecal2))
@@ -147,7 +157,6 @@ class PhaseUp(object):
         self.pickle_and_call('DPPP {}'.format(self.ddecal_diag))
         self.fix_h5('prephase2.h5', True)
         self.pickle_and_call('DPPP {}'.format(self.acal_diag))
-        self.pickle_and_call(self.fulimg)
         self._init_losoto()
         self.pickle_and_call(self.losoto_p)
         self.pickle_and_call(self.losoto_a)
