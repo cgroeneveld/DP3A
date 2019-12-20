@@ -114,7 +114,7 @@ class PhaseUp(object):
         idx_rem_int = np.where([not 'CS' in ant for ant in antennas])
         idx_int = np.where([not ('CS' in ant or 'RS' in ant) for ant in antennas])
         idx_rem = np.where(['RS' in ant for ant in antennas])
-        phasevals[:,:,inter_remote,:,:] = 0.0 # Try setting all directions?
+        phasevals[:,:,idx_rem_int,:,:] = 0.0 # Try setting all directions?
         if also_amp:
             ampvals = H5.getSolset('sol000').getSoltab('amplitude000').getValues()[0]
             ampvals[:,:,idx_rem,0,:] = 1.0 
