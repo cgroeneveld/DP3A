@@ -8,6 +8,12 @@ if __name__ == '__main__':
 
     parsed = parser.parse_args()
     dirlist = os.listdir(parsed.r)
-    print(dirlist)
+    number_dirs = []
     for val in dirlist:
-        print(int(val))
+        try:
+            _ = int(val)
+            number_dirs.append(val)
+        except ValueError:
+            pass
+
+    print(number_dirs)
