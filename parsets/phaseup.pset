@@ -1,4 +1,4 @@
-numthreads = 50
+numthreads = 1
 steps = [adder,filter]
 msin.datacolumn = DATA
 
