@@ -151,7 +151,7 @@ class PhaseUp(object):
         self.pickle_and_call(self.losoto_p)
         self.pickle_and_call(self.losoto_a)
         self.pickle_and_call('DPPP {}'.format(self.ddecal_pu))
-        self.fix_folders()
+        # self.fix_folders()
         self.pickle_and_call(self.predict_call)
 
 

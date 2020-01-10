@@ -6,4 +6,4 @@ axesinplot = [time]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB10/testrun1/phaseup/amp
+prefix = ../LB50/phaseup2/phaseup/amp

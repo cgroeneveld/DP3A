@@ -72,7 +72,7 @@ class PhaseCalibrator(object):
             imname = 'init'
         else:
             imname = 'pcal{}'.format(self.n)
-        self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+        self.fulimg = '{0} -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)

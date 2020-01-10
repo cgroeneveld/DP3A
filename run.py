@@ -13,7 +13,7 @@ import reduction_steps.phase_up as pu
 import datetime
 import quality_check as qc
 
-class FakeParser(obj):
+class FakeParser(object):
     def __init__(self, ms, p, s, d, y, m):
         self.ms = ms
         self.p = p
