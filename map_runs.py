@@ -7,7 +7,8 @@ RUNSTRING = 'uppdd'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
-    fp = run.FakeParser(ms+n, p+n, s, False, True, m)
+    fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m)
+    os.mkdir(p+n)
     print(fp)
 
 if __name__ == '__main__':
