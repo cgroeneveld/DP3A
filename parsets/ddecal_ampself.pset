@@ -1,9 +1,10 @@
-numthreads = 50
+numthreads = 28
 steps = [ddecal]
 msout = .
 
 ddecal.mode= "diagonal"
 ddecal.usemodelcolumn = True
+ddecal.uvlambdamin=40e3
 ddecal.nchan = 0
 ddecal.solint = 400
 ddecal.maxiter = 150

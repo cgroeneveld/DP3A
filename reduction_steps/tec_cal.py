@@ -38,7 +38,7 @@ class TecCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsta.pset')
         data[-1] = 'prefix = {0}teccal{1}/'.format(self.fpath, self.n)
-        self.losoto = 'losoto {0}instrument_t{1}.h5 lsta.pset'.format(self.ms, self.n)
+        self.losoto = 'losoto {0}instrument_t{1}.h5 {2}lsta.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
@@ -58,7 +58,7 @@ class TecCalibrator(object):
         with open(self.pset_loc+'imaging.sh') as handle:
             base_image = handle.read()[:-2]
         imname = 'teccal{}'.format(self.n)
-        self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+        self.fulimg = '{0} -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)

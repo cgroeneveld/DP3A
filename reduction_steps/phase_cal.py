@@ -14,7 +14,7 @@ class PhaseCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -42,14 +42,14 @@ class PhaseCalibrator(object):
         os.remove(self.pset_loc + 'lstp.pset')
         if self.n == 0:
             data[-1] = 'prefix = {0}init/'.format(self.fpath)
-            self.losoto = 'losoto {0}instrument.h5 lstp.pset'.format(self.ms)
+            self.losoto = 'losoto {0}instrument.h5 {1}lstp.pset'.format(self.ms, self.pset_loc)
         else:
             data[-1] = 'prefix = {0}pcal{1}/'.format(self.fpath, self.n)
-            self.losoto = 'losoto {0}instrument_{1}.h5 lstp.pset'.format(self.ms, self.n)
+            self.losoto = 'losoto {0}instrument_{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
-    
+
     def _init_parsets(self):
         ddecal = parse_pset(self.pset_loc + 'ddecal_init.pset')
         acal = parse_pset(self.pset_loc + 'acal_init.pset')
@@ -72,7 +72,7 @@ class PhaseCalibrator(object):
             imname = 'init'
         else:
             imname = 'pcal{}'.format(self.n)
-        self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+        self.fulimg = '{0} -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)

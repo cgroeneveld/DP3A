@@ -1,0 +1,8 @@
+[plot]
+
+operation = PLOT
+axesinplot = [time]
+axisInTable = 'ant'
+NColFig = 0
+figSize = [100,0]
+prefix = ../LB50/run6/apcal4/amp

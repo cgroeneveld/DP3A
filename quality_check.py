@@ -35,27 +35,17 @@ def copy_images(pth, run):
         os.mkdir(pth+'IMAGES')
     shutil.copyfile(pth+run+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(run))
 
-def rebuild_dirlist(dirlist):
-    '''
-        This function is basically a sorter. It formats the different steps in 
-        such a way, that the resulting plot will be in chronological sequence,
-        that is, beginning from "init"
-    '''
-    apcals = list(filter(lambda x: 'apcal' in x, dirlist))
-    pcals = list(filter(lambda x: 'pcal' in x and 'apcal' not in x, dirlist))
-    teccals = list(filter(lambda x: 'teccal' in x, dirlist))
-    is_init = len(list(filter(lambda x: 'init' in x, dirlist))) == 1
-    numbs_pcal = np.array([int(pcal[4:]) for pcal in pcals])
-    numbs_apcal = np.array([int(apcal[5:]) for apcal in apcals])
-    numbs_teccal = np.array([int(teccal[6:]) for teccal in teccals])
-    rebuild_pcals = ['pcal'+str(num) for num in np.sort(numbs_pcal)]
-    rebuild_apcals = ['apcal'+str(num) for num in np.sort(numbs_apcal)]
-    rebuild_teccals = ['teccal'+str(num) for num in np.sort(numbs_teccal)]
-    if is_init:
-        # this is actually obsolete
-        return ['init'] + rebuild_pcals + rebuild_apcals + rebuild_teccals
-    else:
-        return rebuild_pcals + rebuild_apcals + rebuild_teccals
+def rebuild_dirlist(redsteps, nlist):
+    dirlist = []
+    for m, step in zip(nlist,redsteps):
+        n = int(m)
+        if step == 't':
+            dirlist.append('teccal{}'.format(n))
+        elif step == 'd':
+            dirlist.append('apcal{}'.format(n))
+        elif step == 'p':
+            dirlist.append('pcal{}'.format(n))
+    return dirlist
 
 def plotter(text, x, y, path):
     fig,ax = plt.subplots(figsize = (10,7))
@@ -66,11 +56,11 @@ def plotter(text, x, y, path):
     fig.savefig(path, format = 'pdf', bbox_inches = 'tight')
 
 
-def main(fpath):
+def main(fpath, redsteps, nlist):
     logger = jp.Locker(fpath+'log')
     logger.add_calls('quality_check')
 
-    dirlist = rebuild_dirlist(os.listdir(fpath))
+    dirlist = rebuild_dirlist(redsteps, nlist)
     rms = []
     maxmin = []
     snrs = []
@@ -92,4 +82,4 @@ def main(fpath):
     logger.save()
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

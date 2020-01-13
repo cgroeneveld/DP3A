@@ -14,7 +14,7 @@ class DiagonalCalibrator(object):
         self.initialized = False
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
-        self.DEBUG = True
+        self.DEBUG = False
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -39,7 +39,7 @@ class DiagonalCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lstp.pset')
         data[-1] = 'prefix = {0}apcal{1}/'.format(self.fpath, self.n)
-        self.losoto_p = 'losoto {0}instrument_p{1}.h5 lstp.pset'.format(self.ms, self.n)
+        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
@@ -48,7 +48,7 @@ class DiagonalCalibrator(object):
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsta.pset')
         data[-1] = 'prefix = {0}apcal{1}/amp'.format(self.fpath,self.n)
-        self.losoto_a = 'losoto {0}instrument_a{1}.h5 lsta.pset'.format(self.ms, self.n)
+        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}lsta.pset'.format(self.ms, self.n,self.pset_loc)
         with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
@@ -85,7 +85,7 @@ class DiagonalCalibrator(object):
             imname = 'init'
         else:
             imname = 'apcal{}'.format(self.n)
-        self.fulimg = '{0} -data-column CORRECTED_DATA2 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+        self.fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
     
     def pickle_and_call(self,x):
         self.log.add_calls(x)

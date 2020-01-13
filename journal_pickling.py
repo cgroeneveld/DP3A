@@ -31,8 +31,10 @@ class Locker(object):
             self.__dict__.update(tempdict)
     
     def __getitem__(self, name):
-        return self.attrs[name]
+        if type(name) == type(5):
+            return self.reduction_calls[name]
+        else:
+            return self.attrs[name]
     
     def __setitem__(self, name, data):
         self.attrs[name] = data
-    

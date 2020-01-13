@@ -1,0 +1,14 @@
+numthreads = 1
+steps = [adder,filter]
+msin.datacolumn = DATA
+
+msout.writefullresflag = False
+msout.overwrite = True
+msout.storagemanager = dysco
+
+adder.type = stationadder
+adder.stations = {ST001:CS*}
+
+filter.type = filter
+filter.baseline = "^[C]S*&&"
+filter.remove = True

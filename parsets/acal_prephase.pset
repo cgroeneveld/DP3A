@@ -1,0 +1,5 @@
+msin.datacolumn="DATA"
+msout = .
+steps = [applycal]
+
+applycal.correction = "phase000"
