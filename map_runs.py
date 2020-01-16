@@ -11,7 +11,6 @@ def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
     fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m)
     os.mkdir(p+n)
-    subprocess.call('wsclean -predict -name {0} {1}'.format(m, ms+n)
     run.main(fp)
 
 if __name__ == '__main__':
