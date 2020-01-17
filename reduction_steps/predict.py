@@ -22,16 +22,6 @@ class Predictor(object):
         elif self.type == 'skymodel' or self.type == 'sourcedb':
             self._init_pset(abbr_name+'.sourcedb')
             self.call_string = 'DPPP {0}'.format(self.dppp_predict)
-    
-    def execute(self):
-        if self.DEBUG:
-            self._printrun()
-        else:
-            self._actualrun()
-    
-    def _printrun(self):
-        with open('kittens.fl', 'a') as handle:
-            handle.write(self.call_string)
 
     def _actualrun(self):
         self.pickle_and_call(self.call_string)
