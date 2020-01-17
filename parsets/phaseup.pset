@@ -1,6 +1,6 @@
-numthreads = 1
+numthreads = 28
 steps = [adder,filter]
-msin.datacolumn = CORRECTED_DATA2
+msin.datacolumn = CORRECTED_DATA
 
 msout.writefullresflag = False
 msout.overwrite = True

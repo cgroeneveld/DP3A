@@ -1,11 +1,11 @@
-numthreads = 1
+numthreads = 28
 steps = [ddecal]
 msin.datacolumn = DATA
 msout = .
 
 ddecal.mode = "phaseonly"
 ddecal.usemodelcolumn = True
-ddecal.nchan = 0
+ddecal.nchan = 1
 ddecal.uvmmin=40e3
 ddecal.solint = 4
 ddecal.maxiter = 150
