@@ -10,6 +10,7 @@ def init_folder(fname):
     assert fname[-1] == '/'
     os.mkdir(fname)
     os.mkdir('{}/measurements'.format(fname))
+    os.mkdir('{}/models'.format(fname))
     os.mkdir('{}/runs'.format(fname))
     os.mkdir('{}/images'.format(fname))
 

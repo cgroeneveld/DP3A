@@ -42,13 +42,13 @@ class PhaseUp(object):
         ddecal2 = parse_pset(self.pset_loc + 'ddecal_prephase.pset')
         ddecal2.append('msin={}'.format(self.ms))
         ddecal2.append('ddecal.h5parm={}prephase.h5'.format(self.ms))
-        ddecal2.append('msout.datacolumn=CORRECTED_PHASE')
+        ddecal2.append('msout.datacolumn=CORRECTED_DATA')
         self.ddecal2 = ' '.join(ddecal2)
 
         acal2 = parse_pset(self.pset_loc + 'acal_prephase.pset')
         acal2.append('msin={}'.format(self.ms))
         acal2.append('applycal.parmdb={}prephase.h5'.format(self.ms))
-        acal2.append('msout.datacolumn=CORRECTED_PHASE')
+        acal2.append('msout.datacolumn=CORRECTED_DATA')
         self.acal2 = ' '.join(acal2)
 
         ddecal_diag = parse_pset(self.pset_loc + 'ddecal_ampself.pset')
@@ -79,7 +79,7 @@ class PhaseUp(object):
         with open(self.pset_loc + 'lsupp.pset', 'w') as handle:
             for line in data:
                 handle.write(line)
-
+        # Technically, lsupa.pset is completely unneccesary
         with open(self.pset_loc + 'lsupa.pset', 'r') as handle:
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsupa.pset')
@@ -144,12 +144,12 @@ class PhaseUp(object):
         self.pickle_and_call('DPPP {}'.format(self.ddecal2))
         self.fix_h5('prephase.h5')
         self.pickle_and_call('DPPP {}'.format(self.acal2))
-        self.pickle_and_call('DPPP {}'.format(self.ddecal_diag))
-        self.fix_h5('prephase2.h5', True)
-        self.pickle_and_call('DPPP {}'.format(self.acal_diag))
+        # self.pickle_and_call('DPPP {}'.format(self.ddecal_diag))
+        # self.fix_h5('prephase2.h5', True)
+        # self.pickle_and_call('DPPP {}'.format(self.acal_diag))
         self._init_losoto()
         self.pickle_and_call(self.losoto_p)
-        self.pickle_and_call(self.losoto_a)
+        # self.pickle_and_call(self.losoto_a)
         self.pickle_and_call('DPPP {}'.format(self.ddecal_pu))
         self.fix_folders()
         self.pickle_and_call(self.predict_call)

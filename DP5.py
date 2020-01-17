@@ -10,6 +10,7 @@ import reduction_steps.diag_cal as dc
 import reduction_steps.phase_cal as pc
 import reduction_steps.tec_cal as tc
 import reduction_steps.phase_up as pu
+import reduction_steps.predict as pr
 import datetime
 import quality_check as qc
 
@@ -29,14 +30,14 @@ def main(parsed):
             p  |   Phase only calibration
             d  |   Diagonal calibration, meaning one phase and one diagonal calibration
             t  |   TEC calibration for the ionosphere, basically a constraint on the
-            |   phase-only calibration
+               |   phase-only calibration
             u  |   Phase-up: mash all short baselines together to one single base station
-            |   Requires a model.
+               |   Requires a model.
+            m  |   Predict using a new model - requires a model
             _____________________________________________________________________________
 
             These have not yet been implemented:
             r  |   Correction for rotation measure. Important for low frequencies
-            m  |   Predict using a new model - requires a model
         ''')
 
     redsteps = list(parsed.s)
@@ -65,6 +66,8 @@ def main(parsed):
             cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './parsets/')
         elif red == 'u':
             cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/', parsed.m)
+        elif red == 'm':
+            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, './parsets/')
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
