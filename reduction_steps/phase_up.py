@@ -6,6 +6,7 @@ import subprocess
 import journal_pickling as jp
 import shutil as shu
 import diag_cal as dc
+import predict as pr
 from losoto import h5parm
 from .tools import parse_pset
 
@@ -27,7 +28,6 @@ class PhaseUp(object):
     def initialize(self):
         self._init_parsets()
         self._init_dir()
-        self._init_calibrate()
         self.initialized = True
     
     def _init_dir(self):
@@ -99,9 +99,6 @@ class PhaseUp(object):
         shu.copytree('{}_pu/'.format(self.ms[:-1]), self.ms)
         shu.rmtree('{}_pu/'.format(self.ms[:-1]))
 
-    def _init_calibrate(self):
-        self.predict_call = 'wsclean -predict -name {0} {1}'.format(self.predict_path, self.ms)
-
     def fix_h5(self, parmname, also_amp = False):
         '''
             THIS FUNCTION IS MISBEHAVING
@@ -152,8 +149,9 @@ class PhaseUp(object):
         # self.pickle_and_call(self.losoto_a)
         self.pickle_and_call('DPPP {}'.format(self.ddecal_pu))
         self.fix_folders()
-        self.pickle_and_call(self.predict_call)
-
+        predictor = pr.Predictor(self.ms, self.predict_path, self.fpath, self.pset_loc)
+        predictor.initialize()
+        predictor.execute()
 
     def execute(self):
         if self.DEBUG:

@@ -47,7 +47,7 @@ class Predictor(object):
         elif self.pred_path[-9:] == '.skymodel':
             return self.pred_path[:-9],'skymodel'
         elif self.pred_path[-9:] == '.sourcedb':
-            return self.pred_path[-9:],'sourcedb'
+            return self.pred_path[:-9],'sourcedb'
         else:
             raise NotImplementedError(
                 'Model "{}" is in a non-recognized format'.format(self.pred_path))
