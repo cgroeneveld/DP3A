@@ -43,7 +43,7 @@ class Predictor(object):
 
     def check_model_type(self):
         if self.pred_path[-5:] == '.fits':
-            return self.pred_path[:-5],'fits'
+            return self.pred_path[:-11],'fits'
         elif self.pred_path[-9:] == '.skymodel':
             return self.pred_path[:-9],'skymodel'
         elif self.pred_path[-9:] == '.sourcedb':
@@ -56,4 +56,5 @@ class Predictor(object):
         predict_pset = parse_pset('{}predict.pset'.format(self.pset_loc))
         predict_pset.append('msin={}'.format(self.ms))
         predict_pset.append('predict.sourcedb={}'.format(sourcedb))
+        predict_pset.append('msout.datacolumn=MODEL_DATA')
         self.dppp_predict = ' '.join(predict_pset)

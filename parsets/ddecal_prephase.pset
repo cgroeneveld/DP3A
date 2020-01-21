@@ -1,4 +1,4 @@
-numthreads = 28
+numthreads = 1
 steps = [ddecal]
 msin.datacolumn = DATA
 msout = .
