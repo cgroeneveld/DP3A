@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.7
-import run
+import DP5 as run
 import os
 import argparse
 import multiprocessing as mp
 import subprocess
 
-RUNSTRING = 'uppdd'
+RUNSTRING = 'muppdd'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple

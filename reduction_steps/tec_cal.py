@@ -48,6 +48,8 @@ class TecCalibrator(object):
         acal = parse_pset(self.pset_loc + 'acal_teconly.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
+        ddecal.append('msout.datacolumn=CORRECTED_DATA')
+        acal.append('msout.datacolumn=CORRECTED_DATA')
 
         ddecal.append('ddecal.h5parm={0}instrument_t{1}.h5'.format(self.ms,self.n))
         acal.append('applycal.parmdb={0}instrument_t{1}.h5'.format(self.ms,self.n))

@@ -1,3 +1,4 @@
+numthreads = 28
 msout = .
 steps = [predict]
 

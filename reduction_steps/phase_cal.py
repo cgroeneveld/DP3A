@@ -55,6 +55,8 @@ class PhaseCalibrator(object):
         acal = parse_pset(self.pset_loc + 'acal_init.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
+        ddecal.append('msout.datacolumn=CORRECTED_DATA')
+        acal.append('msout.datacolumn=CORRECTED_DATA')
 
         if self.n == 0:
             ddecal.append('ddecal.h5parm={0}instrument.h5'.format(self.ms))
