@@ -5,7 +5,7 @@ import argparse
 import multiprocessing as mp
 import subprocess
 
-RUNSTRING = 'muppdd'
+RUNSTRING = 'm'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
