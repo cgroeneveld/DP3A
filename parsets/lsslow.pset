@@ -1,9 +1,9 @@
 [plot]
 
-Soltab=[sol000/amplitude000]
+soltab=[sol000/phase000]
 operation = PLOT
 axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB_all/concattest1/apcal3/amp
+prefix = ../LB_all/concattest1/apcal3/slowphase

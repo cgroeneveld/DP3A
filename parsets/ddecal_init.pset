@@ -6,6 +6,6 @@ msout = .
 ddecal.mode = "phaseonly"
 ddecal.usemodelcolumn = True
 ddecal.nchan = 1
-ddecal.uvmmin=40e3
+ddecal.uvlambdamin=20e3
 ddecal.solint = 4
 ddecal.maxiter = 150

@@ -2,8 +2,8 @@
 
 soltab = sol000/amplitude000
 operation = PLOT
-axesinplot = [time]
+axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB10/test_phaseup_working/phaseup/amp
+prefix = ../LB_all/umrun/7AVG/phaseup/amp

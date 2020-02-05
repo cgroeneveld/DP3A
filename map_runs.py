@@ -5,7 +5,7 @@ import argparse
 import multiprocessing as mp
 import subprocess
 
-RUNSTRING = 'm'
+RUNSTRING = 'mu'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
@@ -25,11 +25,7 @@ if __name__ == '__main__':
     dirlist = os.listdir(parsed.r)
     number_dirs = []
     for val in dirlist:
-        try:
-            _ = int(val)
-            number_dirs.append(val)
-        except ValueError:
-            pass
+        number_dirs.append(val)
     
     pl = mp.Pool(mp.cpu_count())
     combi_tuples = []

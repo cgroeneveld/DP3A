@@ -15,7 +15,7 @@ import datetime
 import quality_check as qc
 
 class FakeParser(object):
-    def __init__(self, ms, p, s, d, y, m):
+    def __init__(self, ms, p, s, d, y, m, cwd):
         self.ms = ms
         self.p = p
         self.s = s
@@ -23,7 +23,7 @@ class FakeParser(object):
         self.y = y
         self.m = m
 
-def main(parsed):
+def main(parsed, cwd):
     if parsed.s == 'h':
         print('''
             The following reduction steps have (so far) been implemented:
@@ -93,4 +93,4 @@ if __name__ == '__main__':
     parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
 
     parsed = parser.parse_args()
-    main(parsed)
+    main(parsed, os.getcwd())
