@@ -5,4 +5,4 @@ axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB_all/concattest1/apcal3/prephase
+prefix = ../LB_all/circconcat/apcal2/prephase
