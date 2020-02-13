@@ -33,7 +33,10 @@ def copy_images(pth, run):
         pass
     else:
         os.mkdir(pth+'IMAGES')
-    shutil.copyfile(pth+run+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(run))
+    try:
+        shutil.copyfile(pth+run+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(run))
+    except:
+        shutil.copyfile(pth+run+'/ws-MFS-image.fits', pth+'IMAGES/{}.fits'.format(run))
 
 def rebuild_dirlist(redsteps, nlist):
     dirlist = []
@@ -65,7 +68,10 @@ def main(fpath, redsteps, nlist):
     maxmin = []
     snrs = []
     for run in dirlist:
-        data = fits.getdata(fpath+run+'/ws-image.fits')[0,0,:,:]
+        try:
+            data = fits.getdata(fpath+run+'/ws-image.fits')[0,0,:,:]
+        except:
+            data = fits.getdata(fpath+run+'/ws-MFS-image.fits')[0,0,:,:]
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))

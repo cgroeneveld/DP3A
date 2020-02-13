@@ -15,7 +15,7 @@ import datetime
 import quality_check as qc
 
 class FakeParser(object):
-    def __init__(self, ms, p, s, d, y, m, cwd):
+    def __init__(self, ms, p, s, d, y, m):
         self.ms = ms
         self.p = p
         self.s = s

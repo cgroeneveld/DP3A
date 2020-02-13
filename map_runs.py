@@ -11,7 +11,7 @@ def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
     fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m)
     os.mkdir(p+n)
-    run.main(fp)
+    run.main(fp, os.getcwd())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Maps DP3A on several ms at the same time')
