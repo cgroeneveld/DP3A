@@ -6,4 +6,4 @@ axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB_loose4/7AVGCIR/phaseup/amp
+prefix = ../lb_concat/lb2/027/phaseup/amp

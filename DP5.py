@@ -24,6 +24,7 @@ class FakeParser(object):
         self.m = m
 
 def main(parsed, cwd):
+    os.environ['OMP_NUM_THREADS']= '1'
     if parsed.s == 'h':
         print('''
             The following reduction steps have (so far) been implemented:

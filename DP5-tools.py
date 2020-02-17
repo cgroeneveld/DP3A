@@ -30,6 +30,10 @@ def copy_run(rnamefrom, rnameto):
     os.mkdir('runs/{}'.format(rnameto))
     shutil.copytree('runs/{}/parsets'.format(rnamefrom), 'runs/{}/parsets'.format(rnameto))
 
+def copy_images(rname):
+    assert rname[-1] == '/'
+    shutil.copytree('runs/{}IMAGES'.format(rname), 'images/{}'.format(rname))
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('step', help = 'What do you want to do?', default = 'help')
@@ -53,6 +57,8 @@ def main():
                            |  in the root folder of the laboratory
                 copyrun    |  Copies the parsets from a previous run to a new
                            |  run. Needs the name of the new run and the old run.
+                copyimg    |  Copies all images to the image-folder. Not necessary,
+                           |  just makes your life easier
                 help       |  Print this message
         ''')
     elif step == 'init':
@@ -61,6 +67,8 @@ def main():
         init_run(fname)
     elif step == 'copyrun':
         copy_run(fname,folder2)
+    elif step == 'copyimg':
+        copy_images(fname)
     else:
         raise NotImplementedError
     
