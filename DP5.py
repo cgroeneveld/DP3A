@@ -60,15 +60,15 @@ def main(parsed, cwd):
     for red, n in zip(redsteps, nlist):
         n = int(n)
         if red == 'p':
-            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 'd':
-            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 't':
-            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 'u':
-            cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/', parsed.m)
+            cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
         elif red == 'm':
-            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, './parsets/')
+            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
