@@ -1,0 +1,10 @@
+msout = .
+steps = [applycal]
+
+applycal.steps = [applycal1, applycal2]
+
+applycal.applycal2.correction=tec000
+
+applycal.applycal1.correction="phase000"
+
+msout.storagemanager = dysco

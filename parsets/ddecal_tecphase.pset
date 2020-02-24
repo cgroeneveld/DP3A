@@ -1,10 +1,10 @@
 numthreads = 28
 steps = [ddecal]
-msin.datacolumn = DATA
 msout = .
-ddecal.mode = "tec"
+
+ddecal.mode= "tecandphase"
 ddecal.usemodelcolumn = True
-ddecal.nchan = 1
 ddecal.uvlambdamin=20e3
+ddecal.nchan = 1
 ddecal.solint = 4
 ddecal.maxiter = 150

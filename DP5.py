@@ -11,6 +11,7 @@ import reduction_steps.phase_cal as pc
 import reduction_steps.tec_cal as tc
 import reduction_steps.phase_up as pu
 import reduction_steps.predict as pr
+import reduction_steps.tecphase as tp
 import datetime
 import quality_check as qc
 
@@ -35,10 +36,8 @@ def main(parsed, cwd):
             u  |   Phase-up: mash all short baselines together to one single base station
                |   Requires a model.
             m  |   Predict using a new model - requires a model
+            a  |   Solve for both TEC and Phase at the same time 
             _____________________________________________________________________________
-
-            These have not yet been implemented:
-            r  |   Correction for rotation measure. Important for low frequencies
         ''')
 
     redsteps = list(parsed.s)
@@ -69,6 +68,8 @@ def main(parsed, cwd):
             cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
         elif red == 'm':
             cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+        elif red == 'a':
+            cal = tp.TecPhaseCalibrator(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
