@@ -6,3 +6,5 @@ applycal.steps = [applycal1, applycal2]
 applycal.applycal2.correction=amplitude000
 
 applycal.applycal1.correction="phase000"
+
+msout.storagemanager = dysco

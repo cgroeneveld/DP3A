@@ -34,6 +34,27 @@ def copy_images(rname):
     assert rname[-1] == '/'
     shutil.copytree('runs/{}IMAGES'.format(rname), 'images/{}'.format(rname))
 
+def close_run(rname, ms):
+    assert rname[-1] == '/'
+    assert ms[-1] == '/'
+    try:
+        os.mkdir('runs/{}instruments'.format(rname))
+    except OSError:
+        pass
+    try:
+        os.mkdir('runs/{}models'.format(rname))
+    except OSError:
+        pass
+    dirlist = os.listdir('measurements/{}'.format(ms))
+    instruments = list(filter(lambda x: 'instrument' in x, dirlist))
+    for inst in instruments:
+        shutil.copy2('measurements/{0}{1}'.format(ms,inst), 'runs/{0}instruments/{1}'.format(rname,inst))
+    os.copytree('models/', 'runs/{}models'.format(rname))
+    if False:
+        # Copy the measurement set compressed. You can re-gain the correction
+        # by applying the applycal step again
+        callstring = 'DPPP msin=measurements/{0} msout=runs/{1}{0} msout.storagemanager=dysco'.format(ms, rname)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('step', help = 'What do you want to do?', default = 'help')
@@ -69,6 +90,8 @@ def main():
         copy_run(fname,folder2)
     elif step == 'copyimg':
         copy_images(fname)
+    elif step == 'closerun':
+        close_run(fname,folder2)
     else:
         raise NotImplementedError
     

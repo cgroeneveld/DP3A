@@ -94,7 +94,7 @@ class DiagonalCalibrator(object):
             imname = 'init'
         else:
             imname = 'apcal{}'.format(self.n)
-        self.fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
+        self.fulimg = '{0} -data-column CORRECTED_DATA2 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
     
     def pickle_and_call(self,x):
         self.log.add_calls(x)

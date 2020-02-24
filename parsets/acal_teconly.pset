@@ -3,3 +3,4 @@ msout = .
 steps = [applycal]
 
 applycal.correction = "tec000"
+msout.storagemanager = dysco

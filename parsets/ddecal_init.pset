@@ -7,5 +7,5 @@ ddecal.mode = "phaseonly"
 ddecal.usemodelcolumn = True
 ddecal.nchan = 1
 ddecal.uvlambdamin=20e3
-ddecal.solint = 4
+ddecal.solint = 1
 ddecal.maxiter = 150

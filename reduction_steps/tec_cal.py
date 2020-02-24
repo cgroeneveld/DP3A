@@ -60,7 +60,7 @@ class TecCalibrator(object):
         with open(self.pset_loc+'imaging.sh') as handle:
             base_image = handle.read()[:-2]
         imname = 'teccal{}'.format(self.n)
-        self.fulimg = '{0} -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
+        self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)
