@@ -69,7 +69,7 @@ def main(parsed, cwd):
         elif red == 'm':
             cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 'a':
-            cal = tp.TecPhaseCalibrator(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+            cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
