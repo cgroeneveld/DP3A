@@ -50,8 +50,8 @@ class TecPhaseCalibrator(object):
         acal = parse_pset(self.pset_loc + 'acal_tecphase.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
-        ddecal.append('ddecal.h5parm={0}instrument_p{1}.h5'.format(self.ms,self.n))
-        acal.append('applycal.parmdb={0}instrument_p{1}.h5'.format(self.ms,self.n))
+        ddecal.append('ddecal.h5parm={0}instrument_tp{1}.h5'.format(self.ms,self.n))
+        acal.append('applycal.parmdb={0}instrument_tp{1}.h5'.format(self.ms,self.n))
         ddecal.append('msout.datacolumn=CORRECTED_DATA')
         acal.append('msout.datacolumn=CORRECTED_DATA')
         self.ddecal = ' '.join(ddecal)
@@ -60,10 +60,7 @@ class TecPhaseCalibrator(object):
     def _init_img(self):
         with open(self.pset_loc+'imaging.sh') as handle:
             base_image = handle.read()[:-2]
-        if self.n == 0:
-            imname = 'init'
-        else:
-            imname = 'apcal{}'.format(self.n)
+        imname = 'tpcal{}'.format(self.n)
         self.fulimg = '{0} -data-column CORRECTED_DATA -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
     
     def pickle_and_call(self,x):
@@ -80,8 +77,6 @@ class TecPhaseCalibrator(object):
             handle.write('DPPP {}\n'.format(self.acal))
             handle.write(self.fulimg+'\n')
             self._init_losoto()
-            handle.write(self.losoto_p+'\n')
-            handle.write(self.losoto_a)
 
     def _actualrun(self):
         self.pickle_and_call('DPPP {}'.format(self.ddecal))
