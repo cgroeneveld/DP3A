@@ -55,7 +55,6 @@ class PhaseCalibrator(object):
         acal = parse_pset(self.pset_loc + 'acal_init.pset')
         ddecal.append('msin={}'.format(self.ms))
         acal.append('msin={}'.format(self.ms))
-        ddecal.append('msout.datacolumn=CORRECTED_DATA')
         acal.append('msout.datacolumn=CORRECTED_DATA')
 
         if self.n == 0:
@@ -74,7 +73,15 @@ class PhaseCalibrator(object):
             imname = 'init'
         else:
             imname = 'pcal{}'.format(self.n)
-        self.fulimg = '{0} -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+        if os.path.isfile('{}casamask.fits'.format(self.pset_loc)):
+            self.fulimg = '{0} -data-column CORRECTED_DATA -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
+        else:
+            self.fulimg = '{0} -data-column CORRECTED_DATA -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+    
+    def pickle_and_call(self,x):
+        self.log.add_calls(x)
+        subprocess.call(x, shell = True)
+        self.log.save()
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)

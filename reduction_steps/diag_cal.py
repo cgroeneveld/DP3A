@@ -82,7 +82,6 @@ class DiagonalCalibrator(object):
         aamp.append('applycal.parmdb={0}instrument_a{1}.h5'.format(self.ms, self.n))
         ddeamp.append('msin.datacolumn=CORRECTED_PHASE')
         aamp.append('msin.datacolumn=CORRECTED_PHASE')
-        ddeamp.append('msout.datacolumn=CORRECTED_DATA2')
         aamp.append('msout.datacolumn=CORRECTED_DATA2')
         self.ddeamp = ' '.join(ddeamp)
         self.aamp = ' '.join(aamp)

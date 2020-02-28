@@ -42,7 +42,6 @@ class PhaseUp(object):
         ddecal2 = parse_pset(self.pset_loc + 'ddecal_prephase.pset')
         ddecal2.append('msin={}'.format(self.ms))
         ddecal2.append('ddecal.h5parm={}prephase.h5'.format(self.ms))
-        ddecal2.append('msout.datacolumn=CORRECTED_DATA')
         self.ddecal2 = ' '.join(ddecal2)
 
         acal2 = parse_pset(self.pset_loc + 'acal_prephase.pset')
@@ -55,7 +54,6 @@ class PhaseUp(object):
         ddecal_diag.append('msin={}'.format(self.ms))
         ddecal_diag.append('ddecal.h5parm={}prephase2.h5'.format(self.ms))
         ddecal_diag.append('msin.datacolumn=CORRECTED_PHASE')
-        ddecal_diag.append('msout.datacolumn=CORRECTED_DATA2')
         self.ddecal_diag = ' '.join(ddecal_diag)
 
         acal_diag = parse_pset(self.pset_loc + 'acal_ampself.pset')
