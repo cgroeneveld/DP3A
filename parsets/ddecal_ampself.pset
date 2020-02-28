@@ -5,6 +5,6 @@ msout = .
 ddecal.mode= "diagonal"
 ddecal.usemodelcolumn = True
 ddecal.uvlambdamin=20e3
-ddecal.nchan = 8
+ddecal.nchan = 80
 ddecal.solint = 400
 ddecal.maxiter = 150

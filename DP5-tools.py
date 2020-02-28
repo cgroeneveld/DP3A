@@ -5,6 +5,7 @@ import wget
 import tarfile
 import argparse
 import shutil
+import subprocess
 
 def init_folder(fname):
     assert fname[-1] == '/'
@@ -53,7 +54,8 @@ def close_run(rname, ms):
     if False:
         # Copy the measurement set compressed. You can re-gain the correction
         # by applying the applycal step again
-        callstring = 'DPPP msin=measurements/{0} msout=runs/{1}{0} msout.storagemanager=dysco'.format(ms, rname)
+        callstring = 'DPPP msin=measurements/{0} msout=runs/{1}{0} msout.storagemanager=dysco msout.datacolumn=DATA msin.datacolumn=DATA'.format(ms, rname)
+        subprocess.call(callstring, shell = True)
 
 def main():
     parser = argparse.ArgumentParser()
