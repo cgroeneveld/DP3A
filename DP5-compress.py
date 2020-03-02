@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+import re
 import argparse
 import os
 import shutil
@@ -17,6 +18,7 @@ import tarfile
 def close_run(rname, ms):
     assert rname[-1] == '/'
     assert ms[-1] == '/'
+    ms_name = re.sub(r'.*/','/', ms)
     try:
         os.mkdir('{}instruments'.format(rname))
     except OSError:
@@ -25,14 +27,14 @@ def close_run(rname, ms):
         os.mkdir('{}/lastrun'.format(rname))
     except OSError:
         pass
-    dirlist = os.listdir('measurements/{}'.format(ms))
+    dirlist = os.listdir(ms)
     instruments = list(filter(lambda x: 'instrument' in x, dirlist))
     for inst in instruments:
-        shutil.copy2('measurements/{0}{1}'.format(ms,inst), '{0}instruments/{1}'.format(rname,inst))
+        shutil.copy2('{0}{1}'.format(ms,inst), '{0}instruments/{1}'.format(rname,inst))
     shutil.copytree('models/', '{}models'.format(rname))
     # Copy the measurement set compressed. You can re-gain the correction
     # by applying the applycal step again
-    callstring = 'DPPP msin=measurements/{0} msout={1}{0} msout.storagemanager=dysco msout.datacolumn=DATA msin.datacolumn=DATA steps=[]'.format(ms, rname)
+    callstring = 'DPPP msin={0} msout={1}{2} msout.storagemanager=dysco msout.datacolumn=DATA msin.datacolumn=DATA steps=[]'.format(ms, rname, ms_name)
     subprocess.call(callstring, shell = True)
     dirlist = os.listdir(rname)
     callist = list(filter(lambda x: 'cal' in x, dirlist))
