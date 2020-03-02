@@ -6,4 +6,5 @@ axesinplot = [time]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB50/phaseup2/phaseup/
+refant = 'ST001'
+prefix = ../lb_concat/lb2/027/phaseup/

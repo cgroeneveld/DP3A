@@ -2,8 +2,9 @@
 
 soltab = sol000/amplitude000
 operation = PLOT
-axesinplot = [time]
+axesinplot = [time,freq]
 axisInTable = 'ant'
 NColFig = 0
 figSize = [100,0]
-prefix = ../LB50/phaseup2/phaseup/amp
+refant = 'ST001'
+prefix = ../lb_concat/lb2/027/phaseup/amp

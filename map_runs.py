@@ -1,18 +1,17 @@
 #!/usr/bin/env python2.7
-import run
+import DP5 as run
 import os
 import argparse
 import multiprocessing as mp
 import subprocess
 
-RUNSTRING = 'uppdd'
+RUNSTRING = 'mu'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
     fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m)
     os.mkdir(p+n)
-    subprocess.call('wsclean -predict -name {0} {1}'.format(m, ms+n)
-    run.main(fp)
+    run.main(fp, os.getcwd())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Maps DP3A on several ms at the same time')
@@ -26,11 +25,7 @@ if __name__ == '__main__':
     dirlist = os.listdir(parsed.r)
     number_dirs = []
     for val in dirlist:
-        try:
-            _ = int(val)
-            number_dirs.append(val)
-        except ValueError:
-            pass
+        number_dirs.append(val)
     
     pl = mp.Pool(mp.cpu_count())
     combi_tuples = []

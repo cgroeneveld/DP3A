@@ -10,6 +10,8 @@ import reduction_steps.diag_cal as dc
 import reduction_steps.phase_cal as pc
 import reduction_steps.tec_cal as tc
 import reduction_steps.phase_up as pu
+import reduction_steps.predict as pr
+import reduction_steps.tecphase as tp
 import datetime
 import quality_check as qc
 
@@ -22,21 +24,20 @@ class FakeParser(object):
         self.y = y
         self.m = m
 
-def main(parsed):
+def main(parsed, cwd):
+    os.environ['OMP_NUM_THREADS']= '1'
     if parsed.s == 'h':
         print('''
             The following reduction steps have (so far) been implemented:
             p  |   Phase only calibration
             d  |   Diagonal calibration, meaning one phase and one diagonal calibration
             t  |   TEC calibration for the ionosphere, basically a constraint on the
-            |   phase-only calibration
+               |   phase-only calibration
             u  |   Phase-up: mash all short baselines together to one single base station
-            |   Requires a model.
-            _____________________________________________________________________________
-
-            These have not yet been implemented:
-            r  |   Correction for rotation measure. Important for low frequencies
+               |   Requires a model.
             m  |   Predict using a new model - requires a model
+            a  |   Solve for both TEC and Phase at the same time 
+            _____________________________________________________________________________
         ''')
 
     redsteps = list(parsed.s)
@@ -58,13 +59,17 @@ def main(parsed):
     for red, n in zip(redsteps, nlist):
         n = int(n)
         if red == 'p':
-            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 'd':
-            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 't':
-            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, './parsets/')
+            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         elif red == 'u':
-            cal = pu.PhaseUp(n, parsed.ms, parsed.p, './parsets/', parsed.m)
+            cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+        elif red == 'm':
+            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+        elif red == 'a':
+            cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
@@ -90,4 +95,4 @@ if __name__ == '__main__':
     parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
 
     parsed = parser.parse_args()
-    main(parsed)
+    main(parsed, os.getcwd())
