@@ -48,6 +48,8 @@ def rebuild_dirlist(redsteps, nlist):
             dirlist.append('apcal{}'.format(n))
         elif step == 'p':
             dirlist.append('pcal{}'.format(n))
+        elif step == 'a':
+            dirlist.append('tpcal{}'.format(n))
     return dirlist
 
 def plotter(text, x, y, path):

@@ -93,6 +93,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', action = 'store_true', help = 'Enables debug mode')
     parser.add_argument('-y', action = 'store_true', help = 'Automatically accept phase-up warning')
     parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
+    parser.add_argument('-path_wd', action = 'store_true', help = argparse.SUPPRESS)
 
     parsed = parser.parse_args()
-    main(parsed, os.getcwd())
+    if parsed.path_wd:
+        main(parsed, parsed.p)
+    else:
+        main(parsed, os.getcwd())

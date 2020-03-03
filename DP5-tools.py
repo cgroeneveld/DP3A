@@ -25,6 +25,7 @@ def init_run(rname):
     tf.close()
     os.remove(parset_name)
 
+
 def copy_run(rnamefrom, rnameto):
     assert rnamefrom[-1] == '/'
     assert rnameto[-1] == '/'
@@ -35,34 +36,20 @@ def copy_images(rname):
     assert rname[-1] == '/'
     shutil.copytree('runs/{}IMAGES'.format(rname), 'images/{}'.format(rname))
 
-def close_run(rname, ms):
-    '''
-        This function is a good candidate to be completely separated - as this code is the only code
-        that depends on DPPP. Together with the 'uncompresser', which predicts/applycals, this would make
-        way more sense.
-        Potential ideas: we could also add gzip compression, but i think it is best to just leave it as a tar
-        then you can manually gzip it with pigz. Plz use compression level 1, thats better than almost anything.
-    '''
+def execute_run(rname):
     assert rname[-1] == '/'
-    assert ms[-1] == '/'
-    try:
-        os.mkdir('runs/{}instruments'.format(rname))
-    except OSError:
-        pass
-    dirlist = os.listdir('measurements/{}'.format(ms))
-    instruments = list(filter(lambda x: 'instrument' in x, dirlist))
-    for inst in instruments:
-        shutil.copy2('measurements/{0}{1}'.format(ms,inst), 'runs/{0}instruments/{1}'.format(rname,inst))
-    shutil.copytree('models/', 'runs/{}models'.format(rname))
-    # Copy the measurement set compressed. You can re-gain the correction
-    # by applying the applycal step again
-    callstring = 'DPPP msin=measurements/{0} msout=runs/{1}{0} msout.storagemanager=dysco msout.datacolumn=DATA msin.datacolumn=DATA steps=[]'.format(ms, rname)
-    subprocess.call(callstring, shell = True)
-    dirlist = os.listdir('runs/{0}')
-    callist = list(filter(lambda x: 'cal' in x, dirlist))
-    for cal in callist:
-        shutil.copyfile('runs/{0}{1}ws-MFS-model.fits'.format(rname,cal), 'runs/{0}models/{1}-model.fits'.format(rname, rname[:-1]))
-    
+    executefile = '{}parsets/execute'.format(rname)
+    execlist = []
+    with open(executefile, 'r') as handle:
+        for line in handle:
+            execlist.append(line.rstrip('\n'))
+    mslist = os.listdir('measurements')
+    modellist = os.listdir('models')
+    if len(mslist) != 1 or len(modellist) != 1:
+        raise IOError('There should only be one model and measurement set available, otherwise we can\'t autorun DP5')
+    else:
+        execstring = 'DP5.py -ms measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
+        subprocess.call(execstring, shell = True)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -89,6 +76,8 @@ def main():
                            |  run. Needs the name of the new run and the old run.
                 copyimg    |  Copies all images to the image-folder. Not necessary,
                            |  just makes your life easier
+                execute    |  Execute the parameters that are loaded in parsets/
+                           |  execute
                 help       |  Print this message
         ''')
     elif step == 'init':
@@ -99,8 +88,8 @@ def main():
         copy_run(fname,folder2)
     elif step == 'copyimg':
         copy_images(fname)
-    elif step == 'closerun':
-        close_run(fname,folder2)
+    elif step == 'execute':
+        execute_run(fname)
     else:
         raise NotImplementedError
     
