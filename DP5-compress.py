@@ -18,7 +18,8 @@ import tarfile
 def close_run(rname, ms):
     assert rname[-1] == '/'
     assert ms[-1] == '/'
-    ms_name = re.sub(r'.*/','/', ms)
+    ms_name = re.sub(r'.*/','/', ms.rstrip('/'))
+    print(ms,ms_name)
     try:
         os.mkdir('{}instruments'.format(rname))
     except OSError:
@@ -35,6 +36,7 @@ def close_run(rname, ms):
     # Copy the measurement set compressed. You can re-gain the correction
     # by applying the applycal step again
     callstring = 'DPPP msin={0} msout={1}{2} msout.storagemanager=dysco msout.datacolumn=DATA msin.datacolumn=DATA steps=[]'.format(ms, rname, ms_name)
+    print(callstring)
     subprocess.call(callstring, shell = True)
     dirlist = os.listdir(rname)
     callist = list(filter(lambda x: 'cal' in x, dirlist))
