@@ -28,7 +28,32 @@ def max_min(arra):
 def snr(arra):
     return np.max(arra)/calcrms(arra)
 
-def copy_images(pth, run):
+def copy_images(redsteps):
+    '''
+        Standalone version. Will need the reduction string, but figures
+        the rest by itself.
+    '''
+    nums = [i+1 for i in range(len(redsteps))]
+    lendict = {char: [i+1 for i in range(len(list(filter(lambda x: x==char, redsteps))))] for char in np.unique(redsteps)}
+    iternums = [lendict[char].pop(0) for char in redsteps]
+    dirlist = []
+    for fulnum,step,iternum in zip(nums,redsteps,iternums):
+        if step == 't':
+            dirlist.append('teccal{0}'.format(iternum))
+        elif step == 'd':
+            dirlist.append('apcal{0}'.format(iternum))
+        elif step == 'p':
+            dirlist.append('pcal{0}'.format(iternum))
+        elif step == 'a':
+            dirlist.append('tpcal{0}'.format(iternum))
+    tolist = [str(num)+dirry for num,dirry in zip(nums,dirlist)]
+    for to,fro in zip(tolist, dirlist):
+        try:
+            shutil.copyfile(pth+fro+'/ws-MFS-image.fits', pth+'IMAGES/{}.fits'.format(to))
+        except:
+            shutil.copyfile(pth+fro+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(to))
+
+def copy_images_backup(pth, run):
     if os.path.isdir(pth+'IMAGES'):
         pass
     else:
@@ -77,7 +102,7 @@ def main(fpath, redsteps, nlist):
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))
-        copy_images(fpath, run)
+    copy_images(redsteps)
     
     logger.rms = rms
     logger.maxmin = maxmin
