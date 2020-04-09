@@ -26,10 +26,13 @@ class PhaseCalibrator(object):
         self.initialized = True
 
     def _init_dir(self):
-        if self.n == 0:
-            os.mkdir('{0}init'.format(self.fpath))
-        else:
-            os.mkdir('{0}pcal{1}'.format(self.fpath,self.n))
+        try:
+            if self.n == 0:
+                os.mkdir('{0}init'.format(self.fpath))
+            else:
+                os.mkdir('{0}pcal{1}'.format(self.fpath,self.n))
+        except OSError:
+            pass
 
     def _init_losoto(self):
         '''

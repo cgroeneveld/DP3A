@@ -27,7 +27,10 @@ class TecPhaseCalibrator(object):
         self.initialized = True
 
     def _init_dir(self):
-        os.mkdir('{0}tpcal{1}'.format(self.fpath,self.n))
+        try:
+            os.mkdir('{0}tpcal{1}'.format(self.fpath,self.n))
+        except OSError:
+            pass
 
     def _init_losoto(self):
         '''
