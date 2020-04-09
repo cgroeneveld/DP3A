@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 # import print_function
 import matplotlib
 matplotlib.use('Agg')
@@ -28,11 +29,15 @@ def max_min(arra):
 def snr(arra):
     return np.max(arra)/calcrms(arra)
 
-def copy_images(redsteps):
+def copy_images(pth,redsteps):
     '''
         Standalone version. Will need the reduction string, but figures
         the rest by itself.
     '''
+    if os.path.isdir(pth+'IMAGES'):
+        pass
+    else:
+        os.mkdir(pth+'IMAGES')
     nums = [i+1 for i in range(len(redsteps))]
     lendict = {char: [i+1 for i in range(len(list(filter(lambda x: x==char, redsteps))))] for char in np.unique(redsteps)}
     iternums = [lendict[char].pop(0) for char in redsteps]
@@ -46,11 +51,11 @@ def copy_images(redsteps):
             dirlist.append('pcal{0}'.format(iternum))
         elif step == 'a':
             dirlist.append('tpcal{0}'.format(iternum))
-    tolist = [str(num)+dirry for num,dirry in zip(nums,dirlist)]
+    tolist = ['{0:02d}{1}'.format(num,dirry) for num,dirry in zip(nums,dirlist)]
     for to,fro in zip(tolist, dirlist):
         try:
             shutil.copyfile(pth+fro+'/ws-MFS-image.fits', pth+'IMAGES/{}.fits'.format(to))
-        except:
+        except IOError:
             shutil.copyfile(pth+fro+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(to))
 
 def copy_images_backup(pth, run):
@@ -60,7 +65,7 @@ def copy_images_backup(pth, run):
         os.mkdir(pth+'IMAGES')
     try:
         shutil.copyfile(pth+run+'/ws-image.fits', pth+'IMAGES/{}.fits'.format(run))
-    except:
+    except IOError:
         shutil.copyfile(pth+run+'/ws-MFS-image.fits', pth+'IMAGES/{}.fits'.format(run))
 
 def rebuild_dirlist(redsteps, nlist):
@@ -102,7 +107,7 @@ def main(fpath, redsteps, nlist):
         rms.append(calcrms(data))
         maxmin.append(max_min(data))
         snrs.append(snr(data))
-    copy_images(redsteps)
+    copy_images(fpath,redsteps)
     
     logger.rms = rms
     logger.maxmin = maxmin
