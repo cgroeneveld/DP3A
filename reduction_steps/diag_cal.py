@@ -106,6 +106,19 @@ class DiagonalCalibrator(object):
         subprocess.call(x, shell = True)
         self.log.save()
 
+    def calibrate(self):
+        self._init_parsets()
+        self.pickle_and_call('DPPP {}'.format(ddephase))
+        self.pickle_and_call('DPPP {}'.format(aphase))
+        self.pickle_and_call('DPPP {}'.format(ddeamp))
+        self.pickle_and_call('DPPP {}'.format(aamp))
+    
+    def prep_img(self):
+        self._init_dir()
+        self.ms = ''
+        self._init_img()
+        return self.fulimg
+
     def _printrun(self):
         '''
             Basically prints all commands, without running it

@@ -15,6 +15,7 @@ class PhaseCalibrator(object):
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
         self.DEBUG = False
+        self.callist = []
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -80,18 +81,31 @@ class PhaseCalibrator(object):
             self.fulimg = '{0} -data-column CORRECTED_DATA -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
         else:
             self.fulimg = '{0} -data-column CORRECTED_DATA -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
-    
-    def pickle_and_call(self,x):
-        self.log.add_calls(x)
-        subprocess.call(x, shell = True)
-        self.log.save()
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)
         subprocess.call(x, shell = True)
         self.log.save()
 
+    def calibrate(self):
+        '''
+            Only run the calibration, not any imaging 
+        '''
+        self._init_parsets()
+        self.pickle_and_call('DPPP {}'.format(self.ddecal))
+        self.pickle_and_call('DPPP {}'.format(self.acal))
    
+    def prep_img(self):
+        '''
+            This will generate a directory and give the imaging command to be called.
+            It will not have any msses, you need to give that yourself.
+        '''
+        self._init_dir()
+        self.ms = '' # Now we dont get any ms at the end'
+        self._init_img()
+        return self.fulimg
+
+
     def _printrun(self):
         '''
             Basically prints all commands, without running it
