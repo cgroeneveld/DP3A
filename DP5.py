@@ -57,11 +57,12 @@ def main(parsed, cwd):
 
     if 'u' in redsteps or 'm' in redsteps:
         assert parsed.m != None
+    if 'u' in redsteps:
         assert parsed.multims == False
 
     # Load all ms
     if parsed.multims:
-        mslist = ['parsed.ms'+ ms for ms in os.listdir(parsed.ms)]
+        mslist = [parsed.ms+ms+'/' for ms in os.listdir(parsed.ms)]
     else:
         mslist = [parsed.ms]
 
@@ -90,14 +91,17 @@ def main(parsed, cwd):
         elif red == 'm':
             for ms in mslist:
                 cal = pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+                cal.initialize()
+                cal.execute()
         elif red == 'a':
             cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
             cal.DEBUG = True
-        cal.initialize()
-        cal.execute()
+        if not parsed.multims:
+            cal.initialize()
+            cal.execute()
 
     qc.main(parsed.p, redsteps, nlist)
 
