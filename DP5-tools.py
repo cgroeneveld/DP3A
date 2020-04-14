@@ -78,6 +78,7 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
         # Run DP5-compress
         if not nocompress:
             print('==== RUNNING DP5-COMPRESS')
+            ms = mslist
             subprocess.call('DP5-compress.py -ms measurements/{0}/ -r {1}'.format(ms,rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')

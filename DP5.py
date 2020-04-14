@@ -99,9 +99,9 @@ def main(parsed, cwd):
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
             cal.DEBUG = True
-        if not parsed.multims:
-            cal.initialize()
-            cal.execute()
+        #if not parsed.multims:
+        #    cal.initialize()
+        #    cal.execute()
 
     qc.main(parsed.p, redsteps, nlist)
 

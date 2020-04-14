@@ -108,10 +108,10 @@ class DiagonalCalibrator(object):
 
     def calibrate(self):
         self._init_parsets()
-        self.pickle_and_call('DPPP {}'.format(ddephase))
-        self.pickle_and_call('DPPP {}'.format(aphase))
-        self.pickle_and_call('DPPP {}'.format(ddeamp))
-        self.pickle_and_call('DPPP {}'.format(aamp))
+        self.pickle_and_call('DPPP {}'.format(self.ddephase))
+        self.pickle_and_call('DPPP {}'.format(self.aphase))
+        self.pickle_and_call('DPPP {}'.format(self.ddeamp))
+        self.pickle_and_call('DPPP {}'.format(self.aamp))
     
     def prep_img(self):
         self._init_dir()
