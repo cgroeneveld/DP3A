@@ -57,8 +57,6 @@ def main(parsed, cwd):
 
     if 'u' in redsteps or 'm' in redsteps:
         assert parsed.m != None
-    if 'u' in redsteps:
-        assert parsed.multims == False
 
     # Load all ms
     if parsed.multims:
@@ -85,16 +83,29 @@ def main(parsed, cwd):
             imgcall += ' '.join(mslist)
             cal.pickle_and_call(imgcall)
         elif red == 't':
-            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         elif red == 'u':
-            cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+            for ms in mslist:
+                cal = pu.PhaseUp(n, ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+                cal.initialize()
+                cal.execute()
         elif red == 'm':
             for ms in mslist:
                 cal = pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
                 cal.initialize()
                 cal.execute()
         elif red == 'a':
-            cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
