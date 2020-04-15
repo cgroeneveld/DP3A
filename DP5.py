@@ -16,13 +16,14 @@ import datetime
 import quality_check as qc
 
 class FakeParser(object):
-    def __init__(self, ms, p, s, d, y, m):
+    def __init__(self, ms, p, s, d, y, m, multi):
         self.ms = ms
         self.p = p
         self.s = s
         self.d = d
         self.y = y
         self.m = m
+        self.multims = multi
 
 def main(parsed, cwd):
     os.environ['OMP_NUM_THREADS']= '1'
@@ -40,6 +41,7 @@ def main(parsed, cwd):
             _____________________________________________________________________________
         ''')
 
+    # Load the sequence of reductions
     redsteps = list(parsed.s)
     uni_redsteps = np.unique(redsteps)
     nlist = np.zeros(len(redsteps))
@@ -56,26 +58,61 @@ def main(parsed, cwd):
     if 'u' in redsteps or 'm' in redsteps:
         assert parsed.m != None
 
+    # Load all ms
+    if parsed.multims:
+        mslist = [parsed.ms+ms+'/' for ms in os.listdir(parsed.ms)]
+    else:
+        mslist = [parsed.ms]
+
+    # Perform the reductions
+    # TODO: need to fix all the necessary reductions, at least 'd' and 'm'
     for red, n in zip(redsteps, nlist):
         n = int(n)
         if red == 'p':
-            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = pc.PhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         elif red == 'd':
-            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         elif red == 't':
-            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         elif red == 'u':
-            cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+            for ms in mslist:
+                cal = pu.PhaseUp(n, ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+                cal.initialize()
+                cal.execute()
         elif red == 'm':
-            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+                cal.initialize()
+                cal.execute()
         elif red == 'a':
-            cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            for ms in mslist:
+                cal = tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
+                cal.calibrate()
+            imgcall = cal.prep_img()
+            imgcall += ' '.join(mslist)
+            cal.pickle_and_call(imgcall)
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
             cal.DEBUG = True
-        cal.initialize()
-        cal.execute()
+        #if not parsed.multims:
+        #    cal.initialize()
+        #    cal.execute()
 
     qc.main(parsed.p, redsteps, nlist)
 
@@ -94,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('-y', action = 'store_true', help = 'Automatically accept phase-up warning')
     parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
     parser.add_argument('-path_wd', action = 'store_true', help = argparse.SUPPRESS)
+    parser.add_argument('-multims', action = 'store_true', help="Enable multiple ms to be read. This will change ms to be the root folder now.")
 
     parsed = parser.parse_args()
     if parsed.path_wd:

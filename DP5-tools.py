@@ -37,8 +37,10 @@ def copy_images(rname):
     assert rname[-1] == '/'
     shutil.copytree('runs/{}IMAGES'.format(rname), 'images/{}'.format(rname))
 
-def execute_run(rname, noms = False, nocompress = False, savesky = False):
+def execute_run(rname, noms = False, nocompress = False, savesky = False, multims = False):
     assert rname[-1] == '/'
+    if multims:
+        nocompress = True
     executefile = '{}parsets/execute'.format(rname)
     execlist = []
     with open(executefile, 'r') as handle:
@@ -46,41 +48,46 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False):
             execlist.append(line.rstrip('\n'))
     mslist = os.listdir('measurements')
     modellist = os.listdir('models')
-    if len(mslist) != 1 or len(modellist) != 1:
-        raise IOError('There should only be one model and measurement set available, otherwise we can\'t autorun DP5')
+    if len(modellist) != 1:
+        raise IOError('There should only be one model available, otherwise we can\'t autorun DP5')
     else:
         # Run DP5.py
-        execstring = 'DP5.py -ms measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
+        if len(mslist) == 1:
+            execstring = 'DP5.py -ms measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
+        else:
+            execstring = 'DP5.py -ms measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
         subprocess.call(execstring, shell = True)
         # If -no-ms is given, run another wsclean run
-        ms = mslist[0]
         if noms or savesky:
             print('==== RUNNING NOMS WSCLEAN')
             with open('{}parsets/imaging.sh'.format(rname), 'r') as handle:
                 base_image = handle.read()[:-2]
             os.mkdir('{}/noms'.format(rname))
             if os.path.isfile('{}parsets/casamask.fits'.format(rname)):
-                fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {1}parsets/casamask.fits -name {1}noms/ws'.format(base_image, rname)
+                fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {1}parsets/casamask.fits -name {1}noms/ws '.format(base_image, rname)
             else:
-                fulimg = '{0} -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}noms/ws'.format(base_image, rname)
+                fulimg = '{0} -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}noms/ws '.format(base_image, rname)
             if noms:
-                fulimg += ' -no-mf-weighting'
+                fulimg += '-no-mf-weighting '
             if savesky:
-                fulimg += ' -save-source-list -fit-spectral-log-pol 3'
-            fulimg += ' measurements/{}'.format(ms)
+                fulimg += '-save-source-list -fit-spectral-log-pol 3 '
+            ms_appendices = ['measurements/{}'.format(ms) for ms in mslist]
+            fulimg +=  ' '.join(ms_appendices)
             subprocess.call(fulimg, shell = True)
             shutil.copyfile('{}/noms/ws-MFS-image.fits'.format(rname), '{}/IMAGES/noms.fits'.format(rname))
         # Run DP5-compress
-        print('==== RUNNING DP5-COMPRESS')
         if not nocompress:
+            print('==== RUNNING DP5-COMPRESS')
+            ms = mslist
             subprocess.call('DP5-compress.py -ms measurements/{0}/ -r {1}'.format(ms,rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')
-        ms_loc = 'measurements/{}'.format(ms)
-        instruments = list(filter(lambda x: 'instrument' in x, os.listdir(ms_loc)))
-        instrument_locs = ['measurements/{0}/{1}'.format(ms, inst) for inst in instruments]
-        for inst in instrument_locs:
-            os.remove(inst)
+        for ms in mslist:
+            ms_loc = 'measurements/{}'.format(ms)
+            instruments = list(filter(lambda x: 'instrument' in x, os.listdir(ms_loc)))
+            instrument_locs = ['measurements/{0}/{1}'.format(ms, inst) for inst in instruments]
+            for inst in instrument_locs:
+                os.remove(inst)
         # copy images
         print('==== COPYING IMAGES')
         run_name_nopref = re.sub(r'.*/','/',rname.rstrip('/'))
@@ -98,6 +105,7 @@ def main():
     parser.add_argument('-no-ms', help = 'Add an additional imaging run without MF weighting',action='store_true', dest = 'noms')
     parser.add_argument('-no-compress', help = "Don't run DP5-compress afterwards",action = 'store_true', dest = 'nocomp')
     parser.add_argument('-save-sources', help = "Saves a skymodel afterwards", action = 'store_true', dest = 'savesky')
+    parser.add_argument('-multi-ms', help = "Run with multi measurement sets", action = 'store_true', dest = 'multims')
     parsed = parser.parse_args()
 
     step = parsed.step
@@ -132,7 +140,7 @@ def main():
     elif step == 'copyimg':
         copy_images(fname)
     elif step == 'execute':
-        execute_run(fname,parsed.noms,parsed.nocomp,parsed.savesky)
+        execute_run(fname,parsed.noms,parsed.nocomp,parsed.savesky, parsed.multims)
     else:
         raise NotImplementedError
     

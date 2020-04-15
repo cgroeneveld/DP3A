@@ -69,11 +69,16 @@ class TecCalibrator(object):
         subprocess.call(x, shell = True)
         self.log.save()
 
-    def pickle_and_call(self,x):
-        self.log.add_calls(x)
-        subprocess.call(x, shell = True)
-        self.log.save()
-
+    def calibrate(self):
+        self._init_parsets()
+        self.pickle_and_call('DPPP {}'.format(self.ddecal))
+        self.pickle_and_call('DPPP {}'.format(self.acal))
+    
+    def prep_img(self):
+        self._init_dir()
+        self.ms = ''
+        self._init_img()
+        return self.fulimg
    
     def _printrun(self):
         '''
