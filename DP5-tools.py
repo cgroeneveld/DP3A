@@ -76,10 +76,10 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
             subprocess.call(fulimg, shell = True)
             shutil.copyfile('{}/noms/ws-MFS-image.fits'.format(rname), '{}/IMAGES/noms.fits'.format(rname))
         # Run DP5-compress
+        # Does not (fully) support multi-ms runs yet
         if not nocompress:
             print('==== RUNNING DP5-COMPRESS')
-            ms = mslist
-            subprocess.call('DP5-compress.py -ms measurements/{0}/ -r {1}'.format(ms,rname), shell = True)
+            subprocess.call('DP5-compress.py -ms measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')
         for ms in mslist:
