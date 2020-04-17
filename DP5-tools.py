@@ -51,11 +51,13 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
     if len(modellist) != 1:
         raise IOError('There should only be one model available, otherwise we can\'t autorun DP5')
     else:
+        # Copy measurements folder
+        shutil.copytree('measurements/', 'runs/{}/measurements/'.format(rname))
         # Run DP5.py
         if len(mslist) == 1:
-            execstring = 'DP5.py -ms measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
+            execstring = 'DP5.py -ms {1}/measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
         else:
-            execstring = 'DP5.py -ms measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
+            execstring = 'DP5.py -ms {1}/measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
         subprocess.call(execstring, shell = True)
         # If -no-ms is given, run another wsclean run
         if noms or savesky:
@@ -71,7 +73,7 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
                 fulimg += '-no-mf-weighting '
             if savesky:
                 fulimg += '-save-source-list -fit-spectral-log-pol 3 '
-            ms_appendices = ['measurements/{}'.format(ms) for ms in mslist]
+            ms_appendices = ['{0}/measurements/{1}'.format(rname, ms) for ms in mslist]
             fulimg +=  ' '.join(ms_appendices)
             subprocess.call(fulimg, shell = True)
             shutil.copyfile('{}/noms/ws-MFS-image.fits'.format(rname), '{}/IMAGES/noms.fits'.format(rname))
@@ -79,13 +81,13 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
         # Does not (fully) support multi-ms runs yet
         if not nocompress:
             print('==== RUNNING DP5-COMPRESS')
-            subprocess.call('DP5-compress.py -ms measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
+            subprocess.call('DP5-compress.py -ms {1}/measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')
         for ms in mslist:
-            ms_loc = 'measurements/{}'.format(ms)
+            ms_loc = '{0}/measurements/{1}'.format(rname,ms)
             instruments = list(filter(lambda x: 'instrument' in x, os.listdir(ms_loc)))
-            instrument_locs = ['measurements/{0}/{1}'.format(ms, inst) for inst in instruments]
+            instrument_locs = ['{2}/measurements/{0}/{1}'.format(ms, inst, rname) for inst in instruments]
             for inst in instrument_locs:
                 os.remove(inst)
         # copy images
