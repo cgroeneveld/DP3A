@@ -52,12 +52,12 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
         raise IOError('There should only be one model available, otherwise we can\'t autorun DP5')
     else:
         # Copy measurements folder
-        shutil.copytree('measurements/', 'runs/{}/measurements/'.format(rname))
+        shutil.copytree('measurements/', '{}/measurements/'.format(rname))
         # Run DP5.py
         if len(mslist) == 1:
             execstring = 'DP5.py -ms {1}/measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
         else:
-            execstring = 'DP5.py -ms {1}/measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
+            execstring = 'DP5.py -ms {0}/measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
         subprocess.call(execstring, shell = True)
         # If -no-ms is given, run another wsclean run
         if noms or savesky:
