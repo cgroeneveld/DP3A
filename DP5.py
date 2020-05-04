@@ -14,6 +14,7 @@ import reduction_steps.predict as pr
 import reduction_steps.tecphase as tp
 import datetime
 import quality_check as qc
+import multiprocessing as mp
 
 class FakeParser(object):
     def __init__(self, ms, p, s, d, y, m, multi):
@@ -24,6 +25,9 @@ class FakeParser(object):
         self.y = y
         self.m = m
         self.multims = multi
+
+def executeCalibration(cal):
+    cal.calibrate()
 
 def main(parsed, cwd):
     os.environ['OMP_NUM_THREADS']= '1'
@@ -64,29 +68,27 @@ def main(parsed, cwd):
     else:
         mslist = [parsed.ms]
 
+    pool = mp.Pool(3) # Maybe make this a function or something?
     # Perform the reductions
     # TODO: need to fix all the necessary reductions, at least 'd' and 'm'
     for red, n in zip(redsteps, nlist):
         n = int(n)
         if red == 'p':
-            for ms in mslist:
-                cal = pc.PhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
-                cal.calibrate()
-            imgcall = cal.prep_img()
+            callist = [pc.PhaseCalibrator(n,ms,parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
             cal.pickle_and_call(imgcall)
         elif red == 'd':
-            for ms in mslist:
-                cal = dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
-                cal.calibrate()
-            imgcall = cal.prep_img()
+            callist = [dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
             cal.pickle_and_call(imgcall)
         elif red == 't':
-            for ms in mslist:
-                cal = tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
-                cal.calibrate()
-            imgcall = cal.prep_img()
+            callist = [tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
             cal.pickle_and_call(imgcall)
         elif red == 'u':
@@ -100,10 +102,9 @@ def main(parsed, cwd):
                 cal.initialize()
                 cal.execute()
         elif red == 'a':
-            for ms in mslist:
-                cal = tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd))
-                cal.calibrate()
-            imgcall = cal.prep_img()
+            callist=[tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
             cal.pickle_and_call(imgcall)
         else:
