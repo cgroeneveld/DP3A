@@ -41,7 +41,8 @@ class DiagonalCalibrator(object):
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lstp.pset')
-        data[-1] = 'prefix = {0}apcal{1}/prephase'.format(self.fpath, self.n)
+        os.mkdir('{0}/measurements/{1}/losoto/apcal{2}'.format(self.fpath, self.ms, self.n))
+        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/prephase'.format(self.fpath, self.ms, self.n)
         self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lstp.pset', 'w') as handle:
             for line in data:
@@ -50,7 +51,7 @@ class DiagonalCalibrator(object):
         with open(self.pset_loc + 'lsta.pset', 'r') as handle:
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsta.pset')
-        data[-1] = 'prefix = {0}apcal{1}/amp'.format(self.fpath,self.n)
+        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/amp'.format(self.fpath, self.ms, self.n)
         self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}lsta.pset'.format(self.ms, self.n,self.pset_loc)
         with open(self.pset_loc + 'lsta.pset', 'w') as handle:
             for line in data:
@@ -59,7 +60,7 @@ class DiagonalCalibrator(object):
         with open(self.pset_loc + 'lsslow.pset', 'r') as handle:
             data = [line for line in handle]
         os.remove(self.pset_loc + 'lsslow.pset')
-        data[-1] = 'prefix = {0}apcal{1}/slowphase'.format(self.fpath, self.n)
+        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/slowphase'.format(self.fpath, self.ms, self.n)
         self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}lsslow.pset'.format(self.ms, self.n, self.pset_loc)
         with open(self.pset_loc + 'lsslow.pset', 'w') as handle:
             for line in data:
@@ -108,10 +109,14 @@ class DiagonalCalibrator(object):
 
     def calibrate(self):
         self._init_parsets()
+        self._init_losoto()
         self.pickle_and_call('DPPP {}'.format(self.ddephase))
         self.pickle_and_call('DPPP {}'.format(self.aphase))
         self.pickle_and_call('DPPP {}'.format(self.ddeamp))
         self.pickle_and_call('DPPP {}'.format(self.aamp))
+        self.pickle_and_call(self.losoto_p)
+        self.pickle_and_call(self.losoto_a)
+        self.pickle_and_call(self.losoto_slow)
     
     def prep_img(self):
         self._init_dir()
