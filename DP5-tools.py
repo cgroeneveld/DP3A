@@ -53,6 +53,8 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
     else:
         # Copy measurements folder
         shutil.copytree('measurements/', '{}/measurements/'.format(rname))
+        for ms in mslist:
+            os.mkdir('{0}/measurements/{1}/losoto'.format(rname,ms))
         # Run DP5.py
         if len(mslist) == 1:
             execstring = 'DP5.py -ms {1}/measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
@@ -84,12 +86,14 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
             subprocess.call('DP5-compress.py -ms {1}/measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')
+        '''
         for ms in mslist:
             ms_loc = '{0}/measurements/{1}'.format(rname,ms)
             instruments = list(filter(lambda x: 'instrument' in x, os.listdir(ms_loc)))
             instrument_locs = ['{2}/measurements/{0}/{1}'.format(ms, inst, rname) for inst in instruments]
             for inst in instrument_locs:
                 os.remove(inst)
+        '''
         # copy images
         print('==== COPYING IMAGES')
         run_name_nopref = re.sub(r'.*/','/',rname.rstrip('/'))

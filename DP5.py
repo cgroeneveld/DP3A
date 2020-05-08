@@ -29,6 +29,10 @@ class FakeParser(object):
 def executeCalibration(cal):
     cal.calibrate()
 
+def executePredict(cal):
+    cal.initialize()
+    cal.execute()
+
 def main(parsed, cwd):
     os.environ['OMP_NUM_THREADS']= '1'
     if parsed.s == 'h':
@@ -78,35 +82,33 @@ def main(parsed, cwd):
             pool.map(executeCalibration, callist)
             imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
-            cal.pickle_and_call(imgcall)
+            callist[0].pickle_and_call(imgcall)
         elif red == 'd':
             callist = [dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executeCalibration, callist)
             imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
-            cal.pickle_and_call(imgcall)
+            callist[0].pickle_and_call(imgcall)
         elif red == 't':
             callist = [tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executeCalibration, callist)
             imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
-            cal.pickle_and_call(imgcall)
+            callist[0].pickle_and_call(imgcall)
         elif red == 'u':
             for ms in mslist:
                 cal = pu.PhaseUp(n, ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
                 cal.initialize()
                 cal.execute()
         elif red == 'm':
-            for ms in mslist:
-                cal = pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
-                cal.initialize()
-                cal.execute()
+            callist = [pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executePredict, callist)
         elif red == 'a':
             callist=[tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executeCalibration, callist)
             imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
-            cal.pickle_and_call(imgcall)
+            callist[0].pickle_and_call(imgcall)
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:

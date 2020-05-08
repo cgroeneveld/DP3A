@@ -38,31 +38,32 @@ class DiagonalCalibrator(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
+        np.random.seed(np.abs(hash(self.ms))%2**31)
+        self.prephasename = '{:05d}'.format(np.random.randint(20000))
+        self.ampname = '{:05d}'.format(np.random.randint(20000))
+        self.slowphasename = '{:05d}'.format(np.random.randint(20000))
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
-        os.mkdir('{0}/measurements/{1}/losoto/apcal{2}'.format(self.fpath, self.ms, self.n))
-        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/prephase'.format(self.fpath, self.ms, self.n)
-        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+        os.mkdir('{0}/losoto/apcal{1}/'.format( self.ms, self.n))
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/prephase'.format(self.fpath, self.n)
+        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}'.format(self.ms, self.n, self.prephasename)
+        with open(self.prephasename, 'w') as handle:
             for line in data:
                 handle.write(line)
 
         with open(self.pset_loc + 'lsta.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lsta.pset')
-        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/amp'.format(self.fpath, self.ms, self.n)
-        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}lsta.pset'.format(self.ms, self.n,self.pset_loc)
-        with open(self.pset_loc + 'lsta.pset', 'w') as handle:
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/amp'.format(self.fpath, self.n)
+        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n,self.ampname)
+        with open(self.ampname, 'w') as handle:
             for line in data:
                 handle.write(line)
 
         with open(self.pset_loc + 'lsslow.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lsslow.pset')
-        data[-1] = 'prefix = {0}/measurements/{1}/losoto/apcal{2}/slowphase'.format(self.fpath, self.ms, self.n)
-        self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}lsslow.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lsslow.pset', 'w') as handle:
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/slowphase'.format(self.fpath, self.n)
+        self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n, self.slowphasename)
+        with open(self.slowphasename, 'w') as handle:
             for line in data:
                 handle.write(line)
 
@@ -117,6 +118,9 @@ class DiagonalCalibrator(object):
         self.pickle_and_call(self.losoto_p)
         self.pickle_and_call(self.losoto_a)
         self.pickle_and_call(self.losoto_slow)
+        os.remove(self.prephasename)
+        os.remove(self.ampname)
+        os.remove(self.slowphasename)
     
     def prep_img(self):
         self._init_dir()

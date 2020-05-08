@@ -41,17 +41,19 @@ class PhaseCalibrator(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
+        np.random.seed(np.abs(hash(self.ms)%2**31))
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
-        os.mkdir('{0}/measurements/{1}/losoto/pcal{2}'.format(self.fpath,self.ms, self.n))
+        self.psetname = '{:05d}'.format(np.random.randint(20000))
+        print(self.psetname)
+        os.mkdir('{0}/losoto/pcal{1}/'.format(self.ms, self.n))
         if self.n == 0:
-            data[-1] = 'prefix = {0}measurements/{1}/losoto/pcal{2}'.format(self.fpath,self.ms, self.n)
-            self.losoto = 'losoto {0}instrument.h5 {1}lstp.pset'.format(self.ms, self.pset_loc)
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.fpath, self.n)
+            self.losoto = 'losoto {0}instrument.h5 {1}'.format(self.ms, self.psetname)
         else:
-            data[-1] = 'prefix = {0}measurements/{1}/losoto/pcal{2}'.format(self.fpath,self.ms, self.n)
-            self.losoto = 'losoto {0}instrument_{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.fpath, self.n)
+            self.losoto = 'losoto {0}instrument_{1}.h5 {2}'.format(self.ms, self.n, self.psetname)
+        with open(self.psetname, 'w') as handle:
             for line in data:
                 handle.write(line)
 
@@ -97,6 +99,7 @@ class PhaseCalibrator(object):
         self.pickle_and_call('DPPP {}'.format(self.ddecal))
         self.pickle_and_call('DPPP {}'.format(self.acal))
         self.pickle_and_call(self.losoto)
+        os.remove(self.psetname)
    
     def prep_img(self):
         '''
