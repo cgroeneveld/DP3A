@@ -5,6 +5,50 @@ import os
 import subprocess
 import journal_pickling as jp
 from .tools import parse_pset
+from astropy.io import fits
+
+def suppressNegatives(pth):
+    '''
+        Sets all negative values in a particular model image to 0
+        c.f. RvW
+    '''
+    models = list(filter(lambda x: 'model' in x and 'MFS' not in x, os.listdir(pth)))
+    model_paths = ['{0}/{1}'.format(pth,model) for model in models]
+    for mp in model_paths:
+        hdul = fits.open(mp)
+        data = hdul[0].data
+        negmask = data<0
+        data[negmask] = 0
+        hdul[0].data = data
+        hdul.writeto(mp, overwrite=True)
+        hdul.close()
+
+def scaleModels(pth, readlist):
+    '''
+        lets not do this anymore
+    '''
+    reffreq = float(readlist[0])
+    termlist = [float(x) for x in readlist[1].split(',')]
+    models = list(filter(lambda x: 'model' in x and 'MFS' not in x, os.listdir(pth)))
+    model_paths = ['{0}/{1}'.format(pth, model) for model in models]
+    psfs = list(filter(lambda x: 'psf' in x and 'MFS' not in x, os.listdir(pth)))
+    psf_paths = ['{0}/{1}'.format(pth,psf) for psf in psfs]
+    for mp,psfp in zip(model_paths,psf_paths):
+        hdul = fits.open(mp)
+        psf = fits.open(psfp)
+        psf_flux = np.sum(psf[0].data)
+        psf.close()
+        data = hdul[0].data
+        freq = hdul[0].header['CRVAL3']
+        lg_freq = np.log10(freq/reffreq)
+        sum_flx = np.sum(data)
+        lg_target_flx = np.sum([term*lg_freq**n for n,term in enumerate(termlist)])
+        target_flx = 10**lg_target_flx
+        scaling = target_flx/(sum_flx*psf_flux)
+        new_data = data * scaling
+        hdul[0].data = new_data
+        hdul.writeto(mp, overwrite=True)
+        hdul.close()
 
 class DiagonalCalibrator(object):
     def __init__(self, n, ms, fpath, pset_loc = './'):
@@ -99,14 +143,30 @@ class DiagonalCalibrator(object):
         else:
             imname = 'apcal{}'.format(self.n)
         if os.path.isfile('{}casamask.fits'.format(self.pset_loc)):
-            self.fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
+            self.fulimg = '{0} -no-update-model-required -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
         else:
-            self.fulimg = '{0} -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+            self.fulimg = '{0} -no-update-model-required -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
     
     def pickle_and_call(self,x):
         self.log.add_calls(x)
         subprocess.call(x, shell = True)
         self.log.save()
+
+    def run_img(self, mslist):
+        '''
+            Does three things:
+            Firstly, it runs wsclean to generate a model.
+            Next, it modifies the model to suppress negative flux
+            and to make sure the total flux matches a model (if avail)
+        '''
+        fulimg = self.prep_img()
+        imgcall = fulimg + ' '.join(mslist)
+        self.pickle_and_call(imgcall)
+        suppressNegatives('{0}/apcal{1}'.format(self.fpath, self.n))
+        with open(self.pset_loc+'predicting.sh') as handle:
+            base_predict = handle.read()[:-2]
+        base_predict += ' -name {0}/apcal{1}/ws {2}'.format(self.fpath, self.n, ' '.join(mslist))
+        self.pickle_and_call(base_predict)
 
     def calibrate(self):
         self._init_parsets()

@@ -72,7 +72,7 @@ def main(parsed, cwd):
     else:
         mslist = [parsed.ms]
 
-    pool = mp.Pool(3) # Maybe make this a function or something?
+    pool = mp.Pool(4) # Maybe make this a function or something?
     # Perform the reductions
     # TODO: need to fix all the necessary reductions, at least 'd' and 'm'
     for red, n in zip(redsteps, nlist):
@@ -86,9 +86,7 @@ def main(parsed, cwd):
         elif red == 'd':
             callist = [dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executeCalibration, callist)
-            imgcall = callist[0].prep_img()
-            imgcall += ' '.join(mslist)
-            callist[0].pickle_and_call(imgcall)
+            callist[0].run_img(mslist)
         elif red == 't':
             callist = [tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executeCalibration, callist)
