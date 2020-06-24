@@ -32,7 +32,7 @@ Finally, ``execute`` contains the calibration steps. The following steps are use
 |---|---|
 |m|Predict a model, and populate the MODEL column with model visibilities. Typically, this is the first step you want to do in any reduction|
 |p|Phase-only calibration. This corresponds with calibration of only the phases of the XX/YY polarizations (thus, giving you 2 free parameters per antenna)|
-|t|TEC-calibration. This refers to a <img src="https://render.githubusercontent.com/render/math?math=\nu^{-2}"> phase dependency. In addition, such a constrain can prevent overfitting on bad initial models.|
+|t|TEC-calibration. This refers to a <img src="https://render.githubusercontent.com/render/math?math=\frac{1}{\nu}"> phase dependency. In addition, such a constrain can prevent overfitting on bad initial models.|
 |a|TEC+Phase calibration. Basically TEC-calibration with an additional phase calibration run.|
 |d|Diagonal calibration. This begins with a single run of Phase-only calibration, and diagonal calibration is computed on the corrected data from the phase calibration. Diagonal calibration has four free parameters, as it allows for both amplitude and phase to change on the XX/YY correlated polarizations.|
 |u|Phase-up. This can be used at fields with a small angular size, as the short baselines are not necessary. Phase-ups remove these short baselines, significantly speeding up the calibration process.\
