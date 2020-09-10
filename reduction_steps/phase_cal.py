@@ -48,10 +48,10 @@ class PhaseCalibrator(object):
         print(self.psetname)
         os.mkdir('{0}/losoto/pcal{1}/'.format(self.ms, self.n))
         if self.n == 0:
-            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.fpath, self.n)
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.ms, self.n)
             self.losoto = 'losoto {0}instrument.h5 {1}'.format(self.ms, self.psetname)
         else:
-            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.fpath, self.n)
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.ms, self.n)
             self.losoto = 'losoto {0}instrument_{1}.h5 {2}'.format(self.ms, self.n, self.psetname)
         with open(self.psetname, 'w') as handle:
             for line in data:

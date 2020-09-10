@@ -89,7 +89,7 @@ class DiagonalCalibrator(object):
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
         os.mkdir('{0}/losoto/apcal{1}/'.format( self.ms, self.n))
-        data[-1] = 'prefix = {0}/losoto/apcal{1}/prephase'.format(self.fpath, self.n)
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/prephase'.format(self.ms, self.n)
         self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}'.format(self.ms, self.n, self.prephasename)
         with open(self.prephasename, 'w') as handle:
             for line in data:
@@ -97,7 +97,7 @@ class DiagonalCalibrator(object):
 
         with open(self.pset_loc + 'lsta.pset', 'r') as handle:
             data = [line for line in handle]
-        data[-1] = 'prefix = {0}/losoto/apcal{1}/amp'.format(self.fpath, self.n)
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/amp'.format(self.ms, self.n)
         self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n,self.ampname)
         with open(self.ampname, 'w') as handle:
             for line in data:
@@ -105,7 +105,7 @@ class DiagonalCalibrator(object):
 
         with open(self.pset_loc + 'lsslow.pset', 'r') as handle:
             data = [line for line in handle]
-        data[-1] = 'prefix = {0}/losoto/apcal{1}/slowphase'.format(self.fpath, self.n)
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/slowphase'.format(self.ms, self.n)
         self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n, self.slowphasename)
         with open(self.slowphasename, 'w') as handle:
             for line in data:
