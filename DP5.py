@@ -12,6 +12,7 @@ import reduction_steps.tec_cal as tc
 import reduction_steps.phase_up as pu
 import reduction_steps.predict as pr
 import reduction_steps.tecphase as tp
+import reduction_steps.l2c as lc
 import datetime
 import quality_check as qc
 import multiprocessing as mp
@@ -46,6 +47,7 @@ def main(parsed, cwd):
                |   Requires a model.
             m  |   Predict using a new model - requires a model
             a  |   Solve for both TEC and Phase at the same time 
+            l  |   Apply lin2circ: converts from linear to circular basis
             _____________________________________________________________________________
         ''')
 
@@ -107,6 +109,9 @@ def main(parsed, cwd):
             imgcall = callist[0].prep_img()
             imgcall += ' '.join(mslist)
             callist[0].pickle_and_call(imgcall)
+        elif red == 'l':
+            callist = [lc.LinToCirc(n,ms,parsed.p,'{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
