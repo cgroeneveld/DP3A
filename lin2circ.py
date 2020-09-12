@@ -133,4 +133,5 @@ if __name__ == '__main__':
     opt.add_option('-b','--back',help='Go back to linear polarization [default False]',default=False,action='store_true')
     opt.add_option('-l','--lincol',help='Output linear polarization column, if the -b switch is used [default DATA_LIN]; we want to keep the original DATA column',default='DATA_LIN')
     options, arguments = opt.parse_args()
-    main(options)
+    print(options)
+    #main(options)

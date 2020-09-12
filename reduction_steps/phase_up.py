@@ -150,6 +150,7 @@ class PhaseUp(object):
         predictor = pr.Predictor(self.ms, self.predict_path, self.fpath, self.pset_loc)
         predictor.initialize()
         predictor.execute()
+        os.mkdir('{}/losoto'.format(self.ms))
 
     def execute(self):
         if self.DEBUG:
