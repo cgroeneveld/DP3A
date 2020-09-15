@@ -4,3 +4,4 @@ steps = [applycal]
 
 applycal.correction = "phase000"
 msout.storagemanager = dysco
+msout.writefullresflag = false

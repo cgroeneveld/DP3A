@@ -12,17 +12,27 @@ import reduction_steps.tec_cal as tc
 import reduction_steps.phase_up as pu
 import reduction_steps.predict as pr
 import reduction_steps.tecphase as tp
+import reduction_steps.l2c as lc
 import datetime
 import quality_check as qc
+import multiprocessing as mp
 
 class FakeParser(object):
-    def __init__(self, ms, p, s, d, y, m):
+    def __init__(self, ms, p, s, d, y, m, multi):
         self.ms = ms
         self.p = p
         self.s = s
         self.d = d
         self.y = y
         self.m = m
+        self.multims = multi
+
+def executeCalibration(cal):
+    cal.calibrate()
+
+def executePredict(cal):
+    cal.initialize()
+    cal.execute()
 
 def main(parsed, cwd):
     os.environ['OMP_NUM_THREADS']= '1'
@@ -37,9 +47,11 @@ def main(parsed, cwd):
                |   Requires a model.
             m  |   Predict using a new model - requires a model
             a  |   Solve for both TEC and Phase at the same time 
+            l  |   Apply lin2circ: converts from linear to circular basis
             _____________________________________________________________________________
         ''')
 
+    # Load the sequence of reductions
     redsteps = list(parsed.s)
     uni_redsteps = np.unique(redsteps)
     nlist = np.zeros(len(redsteps))
@@ -56,26 +68,57 @@ def main(parsed, cwd):
     if 'u' in redsteps or 'm' in redsteps:
         assert parsed.m != None
 
+    # Load all ms
+    if parsed.multims:
+        mslist = [parsed.ms+ms+'/' for ms in os.listdir(parsed.ms)]
+    else:
+        mslist = [parsed.ms]
+
+    pool = mp.Pool(4) # Maybe make this a function or something?
+    # Perform the reductions
+    # TODO: need to fix all the necessary reductions, at least 'd' and 'm'
     for red, n in zip(redsteps, nlist):
         n = int(n)
         if red == 'p':
-            cal = pc.PhaseCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            callist = [pc.PhaseCalibrator(n,ms,parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
+            imgcall += ' '.join(mslist)
+            callist[0].pickle_and_call(imgcall)
         elif red == 'd':
-            cal = dc.DiagonalCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            callist = [dc.DiagonalCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            callist[0].run_img(mslist)
         elif red == 't':
-            cal = tc.TecCalibrator(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            callist = [tc.TecCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
+            imgcall += ' '.join(mslist)
+            callist[0].pickle_and_call(imgcall)
         elif red == 'u':
-            cal = pu.PhaseUp(n, parsed.ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+            for ms in mslist:
+                cal = pu.PhaseUp(n, ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
+                cal.initialize()
+                cal.execute()
         elif red == 'm':
-            cal = pr.Predictor(parsed.ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd))
+            callist = [pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executePredict, callist)
         elif red == 'a':
-            cal = tp.TecPhaseCalibrator(n,parsed.ms, parsed.p, '{}/parsets/'.format(cwd))
+            callist=[tp.TecPhaseCalibrator(n, ms, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
+            imgcall = callist[0].prep_img()
+            imgcall += ' '.join(mslist)
+            callist[0].pickle_and_call(imgcall)
+        elif red == 'l':
+            callist = [lc.LinToCirc(n,ms,parsed.p,'{}/parsets/'.format(cwd)) for ms in mslist]
+            pool.map(executeCalibration, callist)
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:
             cal.DEBUG = True
-        cal.initialize()
-        cal.execute()
+        #if not parsed.multims:
+        #    cal.initialize()
+        #    cal.execute()
 
     qc.main(parsed.p, redsteps, nlist)
 
@@ -94,6 +137,7 @@ if __name__ == '__main__':
     parser.add_argument('-y', action = 'store_true', help = 'Automatically accept phase-up warning')
     parser.add_argument('-m', type = str, help = "Path to the location of a model FITS file, used whenever we need to predict the model", default = None)
     parser.add_argument('-path_wd', action = 'store_true', help = argparse.SUPPRESS)
+    parser.add_argument('-multims', action = 'store_true', help="Enable multiple ms to be read. This will change ms to be the root folder now.")
 
     parsed = parser.parse_args()
     if parsed.path_wd:

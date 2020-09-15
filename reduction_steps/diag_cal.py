@@ -5,6 +5,24 @@ import os
 import subprocess
 import journal_pickling as jp
 from .tools import parse_pset
+from astropy.io import fits
+from .tools import process_diag
+
+def suppressNegatives(pth):
+    '''
+        Sets all negative values in a particular model image to 0
+        c.f. RvW
+    '''
+    models = list(filter(lambda x: 'model' in x and 'MFS' not in x, os.listdir(pth)))
+    model_paths = ['{0}/{1}'.format(pth,model) for model in models]
+    for mp in model_paths:
+        hdul = fits.open(mp)
+        data = hdul[0].data
+        negmask = data<0
+        data[negmask] = 0
+        hdul[0].data = data
+        hdul.writeto(mp, overwrite=True)
+        hdul.close()
 
 class DiagonalCalibrator(object):
     def __init__(self, n, ms, fpath, pset_loc = './'):
@@ -27,7 +45,10 @@ class DiagonalCalibrator(object):
         self.initialized = True
 
     def _init_dir(self):
-        os.mkdir('{0}apcal{1}'.format(self.fpath,self.n))
+        try:
+            os.mkdir('{0}apcal{1}'.format(self.fpath,self.n))
+        except OSError:
+            pass
 
     def _init_losoto(self):
         '''
@@ -35,30 +56,32 @@ class DiagonalCalibrator(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
+        np.random.seed(np.abs(hash(self.ms))%2**31)
+        self.prephasename = '{:05d}'.format(np.random.randint(20000))
+        self.ampname = '{:05d}'.format(np.random.randint(20000))
+        self.slowphasename = '{:05d}'.format(np.random.randint(20000))
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
-        data[-1] = 'prefix = {0}apcal{1}/prephase'.format(self.fpath, self.n)
-        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+        os.mkdir('{0}/losoto/apcal{1}/'.format( self.ms, self.n))
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/prephase'.format(self.ms, self.n)
+        self.losoto_p = 'losoto {0}instrument_p{1}.h5 {2}'.format(self.ms, self.n, self.prephasename)
+        with open(self.prephasename, 'w') as handle:
             for line in data:
                 handle.write(line)
 
         with open(self.pset_loc + 'lsta.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lsta.pset')
-        data[-1] = 'prefix = {0}apcal{1}/amp'.format(self.fpath,self.n)
-        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}lsta.pset'.format(self.ms, self.n,self.pset_loc)
-        with open(self.pset_loc + 'lsta.pset', 'w') as handle:
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/amp'.format(self.ms, self.n)
+        self.losoto_a = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n,self.ampname)
+        with open(self.ampname, 'w') as handle:
             for line in data:
                 handle.write(line)
 
         with open(self.pset_loc + 'lsslow.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lsslow.pset')
-        data[-1] = 'prefix = {0}apcal{1}/slowphase'.format(self.fpath, self.n)
-        self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}lsslow.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lsslow.pset', 'w') as handle:
+        data[-1] = 'prefix = {0}/losoto/apcal{1}/slowphase'.format(self.ms, self.n)
+        self.losoto_slow = 'losoto {0}instrument_a{1}.h5 {2}'.format(self.ms, self.n, self.slowphasename)
+        with open(self.slowphasename, 'w') as handle:
             for line in data:
                 handle.write(line)
 
@@ -94,14 +117,50 @@ class DiagonalCalibrator(object):
         else:
             imname = 'apcal{}'.format(self.n)
         if os.path.isfile('{}casamask.fits'.format(self.pset_loc)):
-            self.fulimg = '{0} -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
+            self.fulimg = '{0} -no-update-model-required -data-column CORRECTED_DATA2 -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
         else:
-            self.fulimg = '{0} -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
+            self.fulimg = '{0} -no-update-model-required -data-column CORRECTED_DATA2 -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
     
     def pickle_and_call(self,x):
         self.log.add_calls(x)
         subprocess.call(x, shell = True)
         self.log.save()
+
+    def run_img(self, mslist):
+        '''
+            Does three things:
+            Firstly, it runs wsclean to generate a model.
+            Next, it modifies the model to suppress negative flux
+            and to make sure the total flux matches a model (if avail)
+        '''
+        fulimg = self.prep_img()
+        imgcall = fulimg + ' '.join(mslist)
+        self.pickle_and_call(imgcall)
+        suppressNegatives('{0}/apcal{1}'.format(self.fpath, self.n))
+        with open(self.pset_loc+'predicting.sh') as handle:
+            base_predict = handle.read()[:-2]
+        base_predict += ' -name {0}/apcal{1}/ws {2}'.format(self.fpath, self.n, ' '.join(mslist))
+        self.pickle_and_call(base_predict)
+
+    def calibrate(self):
+        self._init_parsets()
+        self._init_losoto()
+        self.pickle_and_call('DPPP {}'.format(self.ddephase))
+        self.pickle_and_call('DPPP {}'.format(self.aphase))
+        self.pickle_and_call('DPPP {}'.format(self.ddeamp))
+        self.pickle_and_call('DPPP {}'.format(self.aamp))
+        self.pickle_and_call(self.losoto_p)
+        self.pickle_and_call(self.losoto_a)
+        self.pickle_and_call(self.losoto_slow)
+        os.remove(self.prephasename)
+        os.remove(self.ampname)
+        os.remove(self.slowphasename)
+    
+    def prep_img(self):
+        self._init_dir()
+        self.ms = ''
+        self._init_img()
+        return self.fulimg
 
     def _printrun(self):
         '''
@@ -121,6 +180,7 @@ class DiagonalCalibrator(object):
         self.pickle_and_call('DPPP {}'.format(self.ddephase))
         self.pickle_and_call('DPPP {}'.format(self.aphase))
         self.pickle_and_call('DPPP {}'.format(self.ddeamp))
+        process_diag('{0}instrument_a{1}.h5'.format(self.ms,self.n))
         self.pickle_and_call('DPPP {}'.format(self.aamp))
         self.pickle_and_call(self.fulimg)
         self._init_losoto()
