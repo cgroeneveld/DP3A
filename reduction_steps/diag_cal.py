@@ -6,6 +6,7 @@ import subprocess
 import journal_pickling as jp
 from .tools import parse_pset
 from astropy.io import fits
+from .tools import process_diag
 
 def suppressNegatives(pth):
     '''
@@ -20,33 +21,6 @@ def suppressNegatives(pth):
         negmask = data<0
         data[negmask] = 0
         hdul[0].data = data
-        hdul.writeto(mp, overwrite=True)
-        hdul.close()
-
-def scaleModels(pth, readlist):
-    '''
-        lets not do this anymore
-    '''
-    reffreq = float(readlist[0])
-    termlist = [float(x) for x in readlist[1].split(',')]
-    models = list(filter(lambda x: 'model' in x and 'MFS' not in x, os.listdir(pth)))
-    model_paths = ['{0}/{1}'.format(pth, model) for model in models]
-    psfs = list(filter(lambda x: 'psf' in x and 'MFS' not in x, os.listdir(pth)))
-    psf_paths = ['{0}/{1}'.format(pth,psf) for psf in psfs]
-    for mp,psfp in zip(model_paths,psf_paths):
-        hdul = fits.open(mp)
-        psf = fits.open(psfp)
-        psf_flux = np.sum(psf[0].data)
-        psf.close()
-        data = hdul[0].data
-        freq = hdul[0].header['CRVAL3']
-        lg_freq = np.log10(freq/reffreq)
-        sum_flx = np.sum(data)
-        lg_target_flx = np.sum([term*lg_freq**n for n,term in enumerate(termlist)])
-        target_flx = 10**lg_target_flx
-        scaling = target_flx/(sum_flx*psf_flux)
-        new_data = data * scaling
-        hdul[0].data = new_data
         hdul.writeto(mp, overwrite=True)
         hdul.close()
 
@@ -206,6 +180,7 @@ class DiagonalCalibrator(object):
         self.pickle_and_call('DPPP {}'.format(self.ddephase))
         self.pickle_and_call('DPPP {}'.format(self.aphase))
         self.pickle_and_call('DPPP {}'.format(self.ddeamp))
+        process_diag('{0}instrument_a{1}.h5'.format(self.ms,self.n))
         self.pickle_and_call('DPPP {}'.format(self.aamp))
         self.pickle_and_call(self.fulimg)
         self._init_losoto()
