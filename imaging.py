@@ -1,10 +1,13 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.modeling import fitting,models
+from astropy.wcs import WCS
 import argparse
 import os
 import sys
+from scipy.ndimage import zoom
 
 def _compute_beam(head):
     beam_area = np.pi/(4*np.log(2)) * head['BMAJ'] * head['BMIN']
@@ -40,7 +43,8 @@ def generate_fluxscale(path_to_int, opts={}):
                                    Because I was stupid, I accidentally used the wrong reffreq
                                    when computing the bandpasses. Put that reffreq here.
                                    Default: no correction. Reffreq I used: 231541442.871094
-                                   
+            figdict             :  Dictionary of previous figures. Adds it into the list.
+                                   Default: makes its own dict. Returns at the end                       
     '''
     dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, os.listdir(path_to_int)))
     sorted_images = np.sort(np.array(dirl)) # Returns the paths to images, all sorted.
@@ -84,11 +88,69 @@ def generate_fluxscale(path_to_int, opts={}):
     ax.set_xticklabels(np.array(10**xticks/1e6, dtype=int))
     yticks = ax.get_yticks()
     ax.set_yticklabels(np.array(10**yticks, dtype=int))
-    plt.show()
     
+    try:
+        figdict = opts['figdict']
+        figdict['integrated'] = fig
+    except KeyError:
+        opts['figdict'] = {'integrated': fig}
+    
+    opts['fluxscale'] = results
+
+    return opts
+
+def plot_MFS(path_to_resolved, opts={}):
+    '''
+        Plots a picture of the resolved image.
+        Allows you to set regions for resolved spectra
+
+        INPUT:
+            path_to_resolved    :  Path to the images of the resolved data
+        
+        OPTS:
+            fluxscale           :  If a fluxscale is determined, fix the fluxscale
+                                   Needs an astropy model that takes frequency (and returns a flux)
+            thres               :  Threshold used for flux determination masking.
+                                   Default: 20
+            zoomf               :  Zoom factor of the final image, default = 1
+    '''
+    data = fits.getdata(path_to_resolved+'ws-MFS-image.fits')[0,0,:,:]
+    head = fits.getheader(path_to_resolved+'ws-MFS-image.fits')
+    frequency = float(head['CRVAL3'])
+    beam_area = _compute_beam(head)
+    try:
+        # Correct the flux, if wanted
+        flux = opts['fluxscale'](frequency)
+        try:
+            threshold = opts['thres']
+        except KeyError:
+            threshold = 20
+        inmask = np.array(data > (threshold * np.mean(data)),dtype=bool)
+        raw_flux = np.sum(data[inmask])/beam_area
+        ratio = flux/raw_flux
+        data *= ratio
+    except KeyError:
+        # Dont scale the data
+        pass
+
+    try:
+        zoomf = opts['zoomf']
+    except KeyError:
+        zoomf = 1
+    data = zoom(data,zoomf) # Zoom the data, so it is a bit clearer
+    coord = WCS(head) # And generate WCS headers for the axes
+    mpl.rcParams.update({'axes.labelsize': 16, 'xtick.labelsize':14})
+
+    f = plt.figure()
+    ax = plt.subplot(projection=coord, slices=('x','y',0,0))
+    ax.imshow(data, origin='lower',vmin=0)
+    plt.show()
+        
+
 
 def main():
-    generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
+    # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
+    plot_MFS(sys.argv[1], {'zoomf':2})
 
 if __name__ == '__main__':
     main()
