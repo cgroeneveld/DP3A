@@ -73,7 +73,7 @@ def generate_fluxscale(path_to_int, opts={}):
     # This is NOT a physical model, only here for interpolation
     fitter = fitting.LevMarLSQFitter()
     model = models.Polynomial1D(degree=len(beam_corrected_fluxes)-1)
-    results = fitter.fit(model,np.log10(frequencies),np.log10(beam_corrected_fluxes))
+    results = fitter(model,np.log10(frequencies),np.log10(beam_corrected_fluxes))
 
     # Generate figure if it is wanted
     fig, ax = plt.subplots()
@@ -81,7 +81,7 @@ def generate_fluxscale(path_to_int, opts={}):
     resamp_x = np.linspace(np.min(np.log10(frequencies)), np.max(np.log10(frequencies)), 1000)
     ax.plot(resamp_x, results(resamp_x))
     xticks = ax.get_xticks()
-    ax.set_xticklabels(np.array(10**xticks, dtype=int))
+    ax.set_xticklabels(np.array(10**xticks/1e6, dtype=int))
     yticks = ax.get_yticks()
     ax.set_yticklabels(np.array(10**yticks, dtype=int))
     plt.show()
