@@ -134,10 +134,16 @@ def plot_MFS(path_to_resolved, opts={}):
         pass
 
     try:
-        zoomf = opts['zoomf']
+        zoomf = float(opts['zoomf'])
     except KeyError:
         zoomf = 1
-    data = zoom(data,zoomf) # Zoom the data, so it is a bit clearer
+    zoomed_data = zoom(data,zoomf) # Zoom the data, so it is a bit clearer
+    n,m = zoomed_data.shape
+    xshape = (int(n/2 - 256), int(n/2 + 256))
+    yshape = (int(m/2 - 256), int(m/2 + 256))
+    data = zoomed_data[xshape[0]:xshape[1],yshape[0]:yshape[1]]
+    head['CDELT1'] /= zoomf
+    head['CDELT2'] /= zoomf
     coord = WCS(head) # And generate WCS headers for the axes
     mpl.rcParams.update({'axes.labelsize': 16, 'xtick.labelsize':14})
 
@@ -150,7 +156,7 @@ def plot_MFS(path_to_resolved, opts={}):
 
 def main():
     # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
-    plot_MFS(sys.argv[1], {'zoomf':2})
+    plot_MFS(sys.argv[1], {'zoomf':2.7})
 
 if __name__ == '__main__':
     main()
