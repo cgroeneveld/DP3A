@@ -1,7 +1,8 @@
-# test
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.widgets import LassoSelector
+from matplotlib.path import Path
 from astropy.io import fits
 from astropy.modeling import fitting,models
 from astropy.wcs import WCS
@@ -216,7 +217,7 @@ def plot_MFS(path_to_resolved, opts={}):
     selector = SelectFromCollection(ax,collection)
     def accept(event):
         if event.key == 'enter':
-            sels.append(selector.xys[selector.ids])
+            sels.append(selector.xys[selector.ind])
             ax.set_title('Press enter to accept selected points as a region')
             f.canvas.draw()
     
