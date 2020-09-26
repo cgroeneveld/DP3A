@@ -224,11 +224,12 @@ def plot_MFS(path_to_resolved, opts={}):
 
     plt.show()
 
-    regionmasks = np.zeros_like(data)
+    regionmask = np.zeros_like(data)
     for regnum,inds in enumerate(sels):
         for comb in inds:
-            regionmask[comb[0],comb[1]] = regnum+1
-    f,ax = plt.subplots()
+            regionmask[comb[1],comb[0]] = regnum+1
+    f = plt.figure
+    ax = plt.subplot(projection=coord,slices=('x','y',0,0))
     ax.imshow(regionmask,origin='lower')
     ax.set_title('Regions')
     plt.show()
