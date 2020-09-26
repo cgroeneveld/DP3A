@@ -67,6 +67,20 @@ class SelectFromCollection(object):
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
 
+class Imager(object):
+    def __init__(self,opts, path_resolved = '', path_integrated = ''):
+        self.opts = opts
+        self.path_resolved = path_resolved
+        self.path_integrated = path_integrated
+    
+    def generate_fluxscale(self):
+        self.opts = generate_fluxscale(self.path_integrated,self.opts)
+    
+    def plot_MFS(self):
+        self.opts = plot_MFS(self.path_resolved,self.opts)
+    
+    def generateRegionSpectra(self):
+        self.opts = generateRegionSpectra(self.path_resolved,self.opts)
 
 def _compute_beam(head):
     beam_area = np.pi/(4*np.log(2)) * head['BMAJ'] * head['BMIN']
@@ -103,7 +117,9 @@ def generate_fluxscale(path_to_int, opts={}):
                                    when computing the bandpasses. Put that reffreq here.
                                    Default: no correction. Reffreq I used: 231541442.871094
             figdict             :  Dictionary of previous figures. Adds it into the list.
-                                   Default: makes its own dict. Returns at the end                       
+                                   Default: makes its own dict. Returns at the end       
+        OUTPUT:
+            fluxscale           :  Integrated fluxscale, as determined by the image of Dutch LOFAR
     '''
     dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, os.listdir(path_to_int)))
     sorted_images = np.sort(np.array(dirl)) # Returns the paths to images, all sorted.
@@ -170,6 +186,9 @@ def plot_MFS(path_to_resolved, opts={}):
             fluxscale           :  If a fluxscale is determined, fix the fluxscale
                                    Needs an astropy model that takes frequency (and returns a flux)
             zoomf               :  Zoom factor of the final image, default = 1
+        
+        OUTPUT:
+            regions             :  Output regions as you just selected
     '''
     data = fits.getdata(path_to_resolved+'ws-MFS-image.fits')[0,0,:,:]
     head = fits.getheader(path_to_resolved+'ws-MFS-image.fits')
@@ -190,6 +209,8 @@ def plot_MFS(path_to_resolved, opts={}):
         # Dont scale the data
         pass
 
+    # Zoom in the image. Make sure that all observations after this also use the same
+    # scale factor.
     try:
         zoomf = float(opts['zoomf'])
     except KeyError:
@@ -204,6 +225,7 @@ def plot_MFS(path_to_resolved, opts={}):
     coord = WCS(head) # And generate WCS headers for the axes
     mpl.rcParams.update({'axes.labelsize': 16, 'xtick.labelsize':14})
 
+    # This generates a 'fake' grid
     xpoints,ypoints = np.mgrid[:512,:512]
 
     f = plt.figure()
@@ -214,6 +236,7 @@ def plot_MFS(path_to_resolved, opts={}):
     sels = []
     selector = SelectFromCollection(ax,collection)
     def accept(event):
+        # This thing is the weird thing that actually labels the regions
         if event.key == 'enter':
             sels.append(selector.xys[selector.ind])
             ax.set_title('Press enter to accept selected points as a region')
@@ -225,6 +248,7 @@ def plot_MFS(path_to_resolved, opts={}):
     plt.show()
 
     regionmask = np.zeros_like(data)
+    # Now extract all the regions and show them
     for regnum,inds in enumerate(sels):
         for comb in inds:
             regionmask[comb[1],comb[0]] = regnum+1
@@ -237,7 +261,46 @@ def plot_MFS(path_to_resolved, opts={}):
     opts['regions'] = sels
     return opts
 
+def generateRegionSpectra(path_to_resolved,opts={}):
+    dirl_images = list(filter(lambda x: 'image' in x and 'MFS' not in x, os.listdir(path_to_resolved)))
+    dirl_images_sorted = np.sort(np.array(dirl_images))
+    data = [fits.getdata(path_to_resolved+dirry)[0,0,:,:] for dirry in dirl_images_sorted]
+    headers = [fits.getheader(path_to_resolved+dirry) for dirry in dirl_images_sorted]
+    beam_areas = [_compute_beam(head) for head in headers]
+    frequencies = [head['CRVAL3'] for head in headers]
+
+    # Try to zoom the image, just like before.
+    try:
+        zoomf = float(opts['zoomf'])
+    except KeyError:
+        zoomf = 1
+    zoomed_data = []
+    for unzoomed in data:
+        zoomed = zoom(unzoomed, zoomf)
+        n,m = zoomed_data.shape
+        xshape = (int(n/2 - 256), int(n/2 + 256))
+        yshape = (int(m/2 - 256), int(m/2 + 256))
+        zoomed_data.append(zoomed[xshape[0]:xshape[1],yshape[0]:yshape[1]])
+    for i in range(len(headers)):
+        headers[i]['CDELT1'] /= zoomf
+        headers[i]['CDELT2'] /= zoomf
+
+    try:
+        regions = opts['regions']
+    except KeyError:
+        print("You need to declare regions first")
+        return 1
+
+    region_fluxes = []
+    for i,reg in enumerate(regions):
+        fluxes = []
+        for img in data:
+            data.append(np.sum(img[reg[1],reg[0]])/beam_areas[i])
+        region_fluxes.append(fluxes)
+    
+
 def main():
+    opts = {'zoomf':2.7, 'alt_reffreq': 231541442.871094}
     # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
     plot_MFS(sys.argv[1], {'zoomf':2.7})
 
