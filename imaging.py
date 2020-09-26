@@ -169,8 +169,6 @@ def plot_MFS(path_to_resolved, opts={}):
         OPTS:
             fluxscale           :  If a fluxscale is determined, fix the fluxscale
                                    Needs an astropy model that takes frequency (and returns a flux)
-            thres               :  Threshold used for flux determination masking.
-                                   Default: 20
             zoomf               :  Zoom factor of the final image, default = 1
     '''
     data = fits.getdata(path_to_resolved+'ws-MFS-image.fits')[0,0,:,:]
@@ -226,9 +224,8 @@ def plot_MFS(path_to_resolved, opts={}):
 
     plt.show()
 
-    print(sels)
-        
-
+    opts['regions'] = sels
+    return opts
 
 def main():
     # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
