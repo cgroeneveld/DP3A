@@ -295,9 +295,12 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     region_fluxes = [] # All of these fluxes are LOGARITHMIC
     for i,reg in enumerate(regions):
         fluxes = []
+        mask = np.zeros_like(data[0]) # Construct a mask, based on the coordinates
+        mask[reg[1],reg[0]] = 1
+        mask = np.array(mask,dtype=bool)
         for img in data:
             print(reg)
-            data.append(np.sum(img[reg[1],reg[0]])/beam_areas[i])
+            data.append(np.sum(img[mask])/beam_areas[i])
         region_fluxes.append(np.log10(np.array(fluxes)))
     
     f,ax = plt.subplots()
