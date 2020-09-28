@@ -252,7 +252,7 @@ def plot_MFS(path_to_resolved, opts={}):
     for regnum,inds in enumerate(sels):
         for comb in inds:
             regionmask[comb[1],comb[0]] = regnum+1
-    f = plt.figure
+    f = plt.figure()
     ax = plt.subplot(projection=coord,slices=('x','y',0,0))
     ax.imshow(regionmask,origin='lower')
     ax.set_title('Regions')
@@ -296,8 +296,9 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     for i,reg in enumerate(regions):
         fluxes = []
         for img in data:
+            print(reg)
             data.append(np.sum(img[reg[1],reg[0]])/beam_areas[i])
-        region_fluxes.append(np.log10(np.array(fluxes))
+        region_fluxes.append(np.log10(np.array(fluxes)))
     
     f,ax = plt.subplots()
     for i,reg in region_fluxes:
@@ -307,6 +308,7 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     yticks = ax.get_yticks()
     ax.set_xticklabels(round(10**xticks/1e6))
     ax.set_yticklabels(round(10**yticks))
+    plt.show()
 
         
 
