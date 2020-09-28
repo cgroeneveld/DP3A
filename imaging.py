@@ -296,29 +296,29 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     for i,reg in enumerate(regions):
         fluxes = []
         mask = np.zeros_like(data[0]) # Construct a mask, based on the coordinates
-        mask[reg[1],reg[0]] = 1
+        for inds in reg:
+            mask[inds[1],inds[0]] = 1
         mask = np.array(mask,dtype=bool)
-        for img in data:
-            print(reg)
-            data.append(np.sum(img[mask])/beam_areas[i])
+        for j,img in enumerate(zoomed_data):
+            fluxes.append(np.sum(img[mask])/beam_areas[j])
         region_fluxes.append(np.log10(np.array(fluxes)))
     
     f,ax = plt.subplots()
-    for i,reg in region_fluxes:
+    for i,reg in enumerate(region_fluxes):
         plt.scatter(log_frequencies,reg,label = 'Region {}'.format(i))
     plt.legend()
     xticks = ax.get_xticks()
     yticks = ax.get_yticks()
-    ax.set_xticklabels(round(10**xticks/1e6))
-    ax.set_yticklabels(round(10**yticks))
+    ax.set_xticklabels(np.array(10**np.array(xticks)/1e6,dtype=int))
+    ax.set_yticklabels(np.array(10**np.array(yticks),dtype=int))
     plt.show()
 
         
 
 def main():
     opts = {'zoomf':2.7, 'alt_reffreq': 231541442.871094}
-    # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
     img_maker = Imager(opts,sys.argv[1], sys.argv[2])
+    # img_maker.generate_fluxscale()
     img_maker.plot_MFS()
     img_maker.generateRegionSpectra()
 
