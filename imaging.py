@@ -68,7 +68,7 @@ class SelectFromCollection(object):
         self.canvas.draw_idle()
 
 class Imager(object):
-    def __init__(self,opts, path_resolved = '', path_integrated = ''):
+    def __init__(self,opts = {}, path_resolved = '', path_integrated = ''):
         self.opts = opts
         self.path_resolved = path_resolved
         self.path_integrated = path_integrated
@@ -277,7 +277,7 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     zoomed_data = []
     for unzoomed in data:
         zoomed = zoom(unzoomed, zoomf)
-        n,m = zoomed_data.shape
+        n,m = zoomed.shape
         xshape = (int(n/2 - 256), int(n/2 + 256))
         yshape = (int(m/2 - 256), int(m/2 + 256))
         zoomed_data.append(zoomed[xshape[0]:xshape[1],yshape[0]:yshape[1]])
@@ -291,18 +291,31 @@ def generateRegionSpectra(path_to_resolved,opts={}):
         print("You need to declare regions first")
         return 1
 
-    region_fluxes = []
+    log_frequencies = np.log10(np.array(frequencies))
+    region_fluxes = [] # All of these fluxes are LOGARITHMIC
     for i,reg in enumerate(regions):
         fluxes = []
         for img in data:
             data.append(np.sum(img[reg[1],reg[0]])/beam_areas[i])
-        region_fluxes.append(fluxes)
+        region_fluxes.append(np.log10(np.array(fluxes))
     
+    f,ax = plt.subplots()
+    for i,reg in region_fluxes:
+        plt.scatter(log_frequencies,reg,label = 'Region {}'.format(i))
+    plt.legend()
+    xticks = ax.get_xticks()
+    yticks = ax.get_yticks()
+    ax.set_xticklabels(round(10**xticks/1e6))
+    ax.set_yticklabels(round(10**yticks))
+
+        
 
 def main():
     opts = {'zoomf':2.7, 'alt_reffreq': 231541442.871094}
     # generate_fluxscale(sys.argv[1], {'alt_reffreq':231541442.871094})         
-    plot_MFS(sys.argv[1], {'zoomf':2.7})
+    img_maker = Imager(opts,sys.argv[1], sys.argv[2])
+    img_maker.plot_MFS()
+    img_maker.generateRegionSpectra()
 
 if __name__ == '__main__':
     main()
