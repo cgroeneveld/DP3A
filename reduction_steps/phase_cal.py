@@ -15,6 +15,7 @@ class PhaseCalibrator(object):
         self.pset_loc = pset_loc
         self.log = jp.Locker(fpath+'log')
         self.DEBUG = False
+        self.callist = []
         assert fpath[-1] == '/'
         assert ms[-1] == '/'
         assert pset_loc[-1] == '/'
@@ -26,10 +27,13 @@ class PhaseCalibrator(object):
         self.initialized = True
 
     def _init_dir(self):
-        if self.n == 0:
-            os.mkdir('{0}init'.format(self.fpath))
-        else:
-            os.mkdir('{0}pcal{1}'.format(self.fpath,self.n))
+        try:
+            if self.n == 0:
+                os.mkdir('{0}init'.format(self.fpath))
+            else:
+                os.mkdir('{0}pcal{1}'.format(self.fpath,self.n))
+        except OSError:
+            pass
 
     def _init_losoto(self):
         '''
@@ -37,16 +41,19 @@ class PhaseCalibrator(object):
             It changes the losoto parset and can conflict if not ran
             immediately afterwards.
         '''
+        np.random.seed(np.abs(hash(self.ms)%2**31))
         with open(self.pset_loc + 'lstp.pset', 'r') as handle:
             data = [line for line in handle]
-        os.remove(self.pset_loc + 'lstp.pset')
+        self.psetname = '{:05d}'.format(np.random.randint(20000))
+        print(self.psetname)
+        os.mkdir('{0}/losoto/pcal{1}/'.format(self.ms, self.n))
         if self.n == 0:
-            data[-1] = 'prefix = {0}init/'.format(self.fpath)
-            self.losoto = 'losoto {0}instrument.h5 {1}lstp.pset'.format(self.ms, self.pset_loc)
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.ms, self.n)
+            self.losoto = 'losoto {0}instrument.h5 {1}'.format(self.ms, self.psetname)
         else:
-            data[-1] = 'prefix = {0}pcal{1}/'.format(self.fpath, self.n)
-            self.losoto = 'losoto {0}instrument_{1}.h5 {2}lstp.pset'.format(self.ms, self.n, self.pset_loc)
-        with open(self.pset_loc + 'lstp.pset', 'w') as handle:
+            data[-1] = 'prefix = {0}/losoto/pcal{1}/'.format(self.ms, self.n)
+            self.losoto = 'losoto {0}instrument_{1}.h5 {2}'.format(self.ms, self.n, self.psetname)
+        with open(self.psetname, 'w') as handle:
             for line in data:
                 handle.write(line)
 
@@ -77,18 +84,34 @@ class PhaseCalibrator(object):
             self.fulimg = '{0} -data-column CORRECTED_DATA -fits-mask {4}casamask.fits -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms, self.pset_loc)
         else:
             self.fulimg = '{0} -data-column CORRECTED_DATA -auto-mask 5 -auto-threshold 1.5 -name {1}{2}/ws {3}'.format(base_image, self.fpath, imname, self.ms)
-    
-    def pickle_and_call(self,x):
-        self.log.add_calls(x)
-        subprocess.call(x, shell = True)
-        self.log.save()
 
     def pickle_and_call(self,x):
         self.log.add_calls(x)
         subprocess.call(x, shell = True)
         self.log.save()
 
+    def calibrate(self):
+        '''
+            Only run the calibration, not any imaging 
+        '''
+        self._init_parsets()
+        self._init_losoto()
+        self.pickle_and_call('DPPP {}'.format(self.ddecal))
+        self.pickle_and_call('DPPP {}'.format(self.acal))
+        self.pickle_and_call(self.losoto)
+        os.remove(self.psetname)
    
+    def prep_img(self):
+        '''
+            This will generate a directory and give the imaging command to be called.
+            It will not have any msses, you need to give that yourself.
+        '''
+        self._init_dir()
+        self.ms = '' # Now we dont get any ms at the end'
+        self._init_img()
+        return self.fulimg
+
+
     def _printrun(self):
         '''
             Basically prints all commands, without running it

@@ -27,7 +27,10 @@ class TecPhaseCalibrator(object):
         self.initialized = True
 
     def _init_dir(self):
-        os.mkdir('{0}tpcal{1}'.format(self.fpath,self.n))
+        try:
+            os.mkdir('{0}tpcal{1}'.format(self.fpath,self.n))
+        except OSError:
+            pass
 
     def _init_losoto(self):
         '''
@@ -70,10 +73,16 @@ class TecPhaseCalibrator(object):
         subprocess.call(x, shell = True)
         self.log.save()
     
-    def pickle_and_call(self,x):
-        self.log.add_calls(x)
-        subprocess.call(x, shell = True)
-        self.log.save()
+    def calibrate(self):
+        self._init_parsets()
+        self.pickle_and_call('DPPP {}'.format(self.ddecal))
+        self.pickle_and_call('DPPP {}'.format(self.acal))
+    
+    def prep_img(self):
+        self._init_dir()
+        self.ms = '' # Now we dont get any ms at the end of the wsclean call
+        self._init_img()
+        return self.fulimg
 
     def _printrun(self):
         '''

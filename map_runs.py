@@ -9,7 +9,7 @@ RUNSTRING = 'mu'
 
 def single_reduction(combi_tuple):
     ms, p, s, m, n = combi_tuple
-    fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m)
+    fp = run.FakeParser(ms+n+'/', p+n+'/', s, False, True, m, False)
     os.mkdir(p+n)
     run.main(fp, os.getcwd())
 
