@@ -3,6 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
+from matplotlib.patches import Ellipse
 from astropy.io import fits
 from astropy.modeling import fitting,models
 from astropy.wcs import WCS
@@ -81,6 +82,25 @@ class Imager(object):
     
     def generateRegionSpectra(self):
         self.opts = generateRegionSpectra(self.path_resolved,self.opts)
+    
+    def generateSingleImage(self,number):
+        # First, parse the number to find the image you are interested in
+        number_format = '{:04d}'.format(number)
+        dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, self.path_resolved))
+        examp = dirl[2]
+        prefix = examp.split('-')[0]
+        selected_image = '{0}-{1}-image.fits'.format(prefix,number_format)
+
+        self.opts = _set_default(self.opts,'title','')
+        self.opts = _set_default(self.opts,'outname','')
+        self.opts = _set_default(self.opts,'colormap','afmhot')
+        self.opts = _set_default(self.opts,'angds',500) # Should at the very least give a warning 
+        self.opts = _set_default(self.opts,'lnscl',30)
+        self.opts = _set_default(self.opts,'txclr','white')
+        self.opts = _set_default(self.opts,'scpwr',0.5)
+        self.opts = _set_default(self.opts,'zoomf',1)
+
+        self.opts = generateSingleImage(self.path_resolved+selected_image,self.opts)
 
 def _compute_beam(head):
     beam_area = np.pi/(4*np.log(2)) * head['BMAJ'] * head['BMIN']
@@ -94,9 +114,20 @@ def _evaluate_SH(frq, reffrq):
     return 10**SH(x)
 
 def _converter(frq,wrong_freq=231541442.871094):
+    '''
+        So I messed up with my reference frequency when making the bandpasses.
+        This should fix it. Set reference freq to 150e6 once it is fixed.
+    '''
     wrong = _evaluate_SH(frq,wrong_freq)
     right = _evaluate_SH(frq,150e6)
     return right/wrong
+
+def _set_default(opts, key, default):
+    try:
+        a = opts[key]
+    except KeyError:
+        opts[key] = default
+    return opts
 
 def generate_fluxscale(path_to_int, opts={}):
     '''
@@ -313,7 +344,145 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     ax.set_yticklabels(np.array(10**np.array(yticks),dtype=int))
     plt.show()
 
-        
+def generateSingleImage(inname,opts={}):
+    '''
+        Define variables
+        The image needs to be centered and 512x512
+    '''
+
+    FNAME = inname
+    FSIZE = (10,10) # Dont change this, I suppose?
+    TITLE = opts['title']
+    OUTNM = opts['outname'] # Empty will just show the result
+    CLMAP = opts['colormap'] # Default: afmhot
+    ANGDS = opts['angds']  # Mpc
+    LNSCL = opts['lnscl'] # kpc (default 30)
+    ZOOMF = opts['zoomf']
+    FXMAX = 0 # Lets not touch this yet
+    TXCLR = opts['txclr'] # Default white
+
+
+    SCPWR = opts['scpwr'] # Default 0.5
+    SCALE = lambda x: ((np.abs(x)+x)/2)**SCPWR
+    INVSC = lambda x: x**(1/SCPWR)
+
+    OPTIC = opts['optical'] # J2000 (ra,dec) of optical counterpart, (0,0) doesnt show any
+
+    '''
+    =======================================================================
+    '''
+
+    # Read in data
+    hdu = fits.open(FNAME)[0]
+    rawdata = hdu.data[0,0,:,:]
+    head = hdu.header
+
+    # Scale the image/header
+    zoomed_data = zoom(rawdata,ZOOMF)
+    n,m = zoomed_data.shape
+    xshape = (int(n/2 - 256), int(n/2 + 256))
+    yshape = (int(m/2 - 256), int(m/2 + 256))
+    data = zoomed_data[xshape[0]:xshape[1],yshape[0]:yshape[1]]
+    head['CDELT1'] /= ZOOMF
+    head['CDELT2'] /= ZOOMF
+    coord = WCS(head)
+
+    # Do some calculations
+    ang = head['BPA']
+    bmaj = head['BMAJ']
+    bmin = head['BMIN']
+    beam_area = _compute_beam(head)
+    freq = '{:0.3} MHz'.format(head['CRVAL3']/1e6)
+
+    scale = -head['CDELT1']
+
+    mpl.rcParams.update({'axes.labelsize': 16, 'xtick.labelsize':14})
+
+    # Scale the entire image to the correct fluxscale
+    try:
+        # But only if there is a fluxscale
+        flscale = opts['fluxscale']
+        logfreq = np.log10(float(head['CRVAL3']))
+        logflx = flscale(logfreq)
+        flux_should_be = 10** logflx
+
+        try:
+            threshold = opts['thres']
+        except KeyError:
+            threshold = 20
+        mask = np.array(data > (threshold * np.mean(data)), dtype = bool)
+        actual_flux = np.sum(data[mask])/beam_area
+        ratio = flux_should_be/actual_flux
+        data *= ratio
+    except KeyError:
+        # Dont scale if we do not have a fixed fluxscale
+        pass
+
+    # Build figure
+    f = plt.figure(figsize=FSIZE)
+    ax = plt.subplot(projection = coord,slices=('x','y',0,0))
+    if FXMAX==0:
+        vmax = np.max(SCALE(data))
+    else:
+        vmax = SCALE(FXMAX)
+    cm = ax.imshow(SCALE(data), origin='lower', cmap=CLMAP, vmin=0,vmax = vmax)
+
+    # Build colorbar
+    cbar = plt.colorbar(cm, fraction = 0.046)
+    cbar.set_label(r'Intensity (Jy/beam) $\rightarrow$')
+    ticks = cbar.get_ticks()
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels(['{:0.3}'.format(tick) for tick in INVSC(ticks)])
+    cbar.ax.tick_params(labelsize=16)
+
+    # Put in optical counterpart
+    if OPTIC[0] != 0 and OPTIC[1] != 0:
+        ra_delt = OPTIC[0] - head['CRVAL1']
+        dec_delt = OPTIC[1] - head['CRVAL2']
+        ra_delt_pix = ra_delt / head['CDELT1']
+        dec_delt_pix = dec_delt / head['CDELT2']
+    
+        optic_pix_ra = ra_delt_pix + head['CRPIX1']
+        optic_pix_dec = dec_delt_pix + head['CRPIX2']
+        ax.scatter([optic_pix_ra],[optic_pix_dec], color = TXCLR, marker = '+', s = 220)
+
+    
+    # Add distance line
+    if ANGDS == 0:
+        pass
+    else:
+        line_size = LNSCL / (1000*ANGDS) # radian
+        line_size *= 180/np.pi # degrees
+        pixel_size = line_size/scale
+
+    # Add texts
+    # ax.set_title(TITLE, fontsize=24, y=1.02)
+    ax.text(256,480, TITLE, horizontalalignment='center', color = TXCLR, fontsize = 24)
+    ax.text(40 ,50, freq, color=TXCLR, fontsize = 16)
+    ax.text(40, 20, '{0:.2}"x{1:.2}"'.format(bmaj*3600, bmin*3600), color = TXCLR, fontsize = 16)
+    ax.text(480,40, '{} kpc'.format(LNSCL), color = TXCLR, fontsize = 14, horizontalalignment='right')
+    ax.plot([480,480-pixel_size],[20,20], color = TXCLR, lw = 4)
+    beam = Ellipse((20,30), bmin/scale, bmaj/scale, ang, edgecolor=TXCLR, fill = False, lw = 2)
+    ax.add_artist(beam)
+
+    if OUTNM != '':
+        f.savefig(OUTNM+'.png', format='png', bbox_inches='tight')
+    else:
+        plt.show()
+
+    try:
+        figdict = opts['figdict']
+        try:
+            spect_imgs = figdict['spectral_images']
+            spect_imgs.append(f)
+            figdict['spectral_images'] = spect_imgs
+        except KeyError:
+            # Make new list of spectral images
+            figdict['spectral_images'] = [f]
+    except KeyError:
+        opts['figdict'] = {'spectral_images': [f]}
+
+    return opts
 
 def main():
     opts = {'zoomf':2.7, 'alt_reffreq': 231541442.871094}
