@@ -76,6 +76,7 @@ class Imager(object):
     
     def generate_fluxscale(self):
         self.opts = _set_default(self.opts, 'size_box', 20)
+        self.opts = _set_default(self.opts, 'alt_reffreq', 231541442.871094)
 
         self.opts = generate_fluxscale(self.path_integrated,self.opts)
     
@@ -503,11 +504,12 @@ def generateSingleImage(inname,opts={}):
     return opts
 
 def main():
-    opts = {'zoomf':2.7, 'alt_reffreq': 231541442.871094}
+    opts = {}
     img_maker = Imager(opts,sys.argv[1], sys.argv[2])
     # img_maker.generate_fluxscale()
     img_maker.plot_MFS()
     img_maker.generateRegionSpectra()
+    img_maker.generateSingleImage(14)
 
 if __name__ == '__main__':
     main()
