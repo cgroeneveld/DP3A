@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(1,'/net/vossemeer/data1/groeneveld/.local/lib/python2.7/site-packages')
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -9,7 +11,6 @@ from astropy.modeling import fitting,models
 from astropy.wcs import WCS
 import argparse
 import os
-import sys
 from scipy.ndimage import zoom
 
 class SelectFromCollection(object):
@@ -82,6 +83,7 @@ class Imager(object):
     
     def plot_MFS(self):
         self.opts = _set_default(self.opts,'thres',20)
+        self.opts = _set_default(self.opts,'zoomf',1)
 
         self.opts = plot_MFS(self.path_resolved,self.opts)
     
@@ -93,7 +95,7 @@ class Imager(object):
     def generateSingleImage(self,number):
         # First, parse the number to find the image you are interested in
         number_format = '{:04d}'.format(number)
-        dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, self.path_resolved))
+        dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, os.listdir(self.path_resolved)))
         examp = dirl[2]
         prefix = examp.split('-')[0]
         selected_image = '{0}-{1}-image.fits'.format(prefix,number_format)
@@ -105,8 +107,9 @@ class Imager(object):
         self.opts = _set_default(self.opts,'lnscl',30)
         self.opts = _set_default(self.opts,'txclr','white')
         self.opts = _set_default(self.opts,'scpwr',0.5)
-        self.opts = _set_default(self.opts,'zoomf',1)
+        self.opts = _set_default(self.opts,'zoomf',1.0)
         self.opts = _set_default(self.opts,'thres',20)
+        self.opts = _set_default(self.opts,'optical',(0,0))
 
         if self.opts['angds'] == 500:
             print('It is actually quite important to set the angular diameter distance, that sets the scale')
@@ -140,8 +143,8 @@ def _set_default(opts, key, default):
     try:
         a = opts[key]
     except KeyError:
-        value = input('{}: '.format(key))
-        if value != ''
+        value = raw_input('{}: \n'.format(key))
+        if value != '':
             opts[key] = value
         else:
             opts[key] = default
@@ -181,7 +184,7 @@ def generate_fluxscale(path_to_int, opts={}):
     # Also assume the image is a nice square
     example_image = datalist[0]
     middle = int(np.shape(example_image)[0]/2)
-    delta = opts['size_box']
+    delta = int(opts['size_box'])
     
     raw_fluxes = [np.sum(data[middle-delta:middle+delta,middle-delta:middle+delta]) for data in datalist]
     beam_corrected_fluxes = [raw_flux/beam_area for raw_flux,beam_area in zip(raw_fluxes,beam_areas)]
@@ -242,7 +245,7 @@ def plot_MFS(path_to_resolved, opts={}):
     beam_area = _compute_beam(head)
     try:
         # Correct the flux, if wanted
-        flux = opts['fluxscale'](frequency)
+        flux = 10**opts['fluxscale'](np.log10(frequency))
         threshold = opts['thres']
         inmask = np.array(data > (threshold * np.mean(data)),dtype=bool)
         raw_flux = np.sum(data[inmask])/beam_area
@@ -294,7 +297,7 @@ def plot_MFS(path_to_resolved, opts={}):
     # Now extract all the regions and show them
     for regnum,inds in enumerate(sels):
         for comb in inds:
-            regionmask[comb[1],comb[0]] = regnum+1
+            regionmask[int(comb[1]),int(comb[0])] = regnum+1
     f = plt.figure()
     ax = plt.subplot(projection=coord,slices=('x','y',0,0))
     ax.imshow(regionmask,origin='lower')
@@ -313,6 +316,20 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     beam_areas = [_compute_beam(head) for head in headers]
     frequencies = [head['CRVAL3'] for head in headers]
 
+    # First, lets rescale our data
+    try:
+        fluxscaling_function = opts['fluxscale']
+        correct_fluxes = [10**fluxscaling_function(np.log10(freq)) for freq in frequencies]
+        masks = [np.array(dat > (opts['thres'] * np.mean(dat)),dtype=bool) for dat in data]
+        actual_fluxes = []
+        for mask,dat,beam in zip(masks,data,beam_areas):
+            actual_fluxes.append(np.sum(dat[mask])/beam)
+        ratios = [correct/actual for correct,actual in zip(correct_fluxes,actual_fluxes)]
+        new_data = [dat * ratio for dat,ratio in zip(data,ratios)]
+        data = new_data
+    except:
+        pass
+
     # Try to zoom the image, just like before.
     zoomf = float(opts['zoomf'])
     zoomed_data = []
@@ -326,6 +343,9 @@ def generateRegionSpectra(path_to_resolved,opts={}):
         headers[i]['CDELT1'] /= zoomf
         headers[i]['CDELT2'] /= zoomf
 
+    # We need to recompute the beam sizes, as we are now zoomed in!!!
+    beam_areas = [_compute_beam(head) for head in headers]
+
     try:
         regions = opts['regions']
     except KeyError:
@@ -338,7 +358,7 @@ def generateRegionSpectra(path_to_resolved,opts={}):
         fluxes = []
         mask = np.zeros_like(data[0]) # Construct a mask, based on the coordinates
         for inds in reg:
-            mask[inds[1],inds[0]] = 1
+            mask[int(inds[1]),int(inds[0])] = 1
         mask = np.array(mask,dtype=bool)
         for j,img in enumerate(zoomed_data):
             fluxes.append(np.sum(img[mask])/beam_areas[j])
@@ -376,7 +396,7 @@ def generateSingleImage(inname,opts={}):
     CLMAP = opts['colormap'] # Default: afmhot
     ANGDS = opts['angds']  # Mpc
     LNSCL = opts['lnscl'] # kpc (default 30)
-    ZOOMF = opts['zoomf']
+    ZOOMF = float(opts['zoomf'])
     FXMAX = 0 # Lets not touch this yet
     TXCLR = opts['txclr'] # Default white
 
@@ -506,7 +526,7 @@ def generateSingleImage(inname,opts={}):
 def main():
     opts = {}
     img_maker = Imager(opts,sys.argv[1], sys.argv[2])
-    # img_maker.generate_fluxscale()
+    img_maker.generate_fluxscale()
     img_maker.plot_MFS()
     img_maker.generateRegionSpectra()
     img_maker.generateSingleImage(14)
