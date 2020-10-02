@@ -78,6 +78,7 @@ class Imager(object):
     def generate_fluxscale(self):
         self.opts = _set_default(self.opts, 'size_box', 20)
         self.opts = _set_default(self.opts, 'alt_reffreq', 231541442.871094)
+        self.opts = _set_default(self.opts, 'integrated_order',0)
 
         self.opts = generate_fluxscale(self.path_integrated,self.opts)
     
@@ -199,8 +200,12 @@ def generate_fluxscale(path_to_int, opts={}):
 
     # Now fit a high-parameter model against this data
     # This is NOT a physical model, only here for interpolation
+    # The order should normally be N-1, but can be altered manually if necessary
     fitter = fitting.LevMarLSQFitter()
-    model = models.Polynomial1D(degree=len(beam_corrected_fluxes)-1)
+    if opts['integrated_order'] == 0:
+        model = models.Polynomial1D(degree=len(beam_corrected_fluxes)-1)
+    else:
+        model = models.Polynomial1D(degree=int(opts['integrated_order']))
     results = fitter(model,np.log10(frequencies),np.log10(beam_corrected_fluxes))
 
     # Generate figure if it is wanted
@@ -385,7 +390,8 @@ def generateRegionSpectra(path_to_resolved,opts={}):
 
 def generateSingleImage(inname,opts={}):
     '''
-        Define variables
+        This function will make an image of a single channel.
+        First, define variables
         The image needs to be centered and 512x512
     '''
 
@@ -529,7 +535,7 @@ def main():
     img_maker.generate_fluxscale()
     img_maker.plot_MFS()
     img_maker.generateRegionSpectra()
-    img_maker.generateSingleImage(14)
+    img_maker.generateSingleImage(22)
 
 if __name__ == '__main__':
     main()
