@@ -75,12 +75,18 @@ class Imager(object):
         self.path_integrated = path_integrated
     
     def generate_fluxscale(self):
+        self.opts = _set_default(self.opts, 'size_box', 20)
+
         self.opts = generate_fluxscale(self.path_integrated,self.opts)
     
     def plot_MFS(self):
+        self.opts = _set_default(self.opts,'thres',20)
+
         self.opts = plot_MFS(self.path_resolved,self.opts)
     
     def generateRegionSpectra(self):
+        self.opts = _set_default(self.opts,'zoomf',1)
+
         self.opts = generateRegionSpectra(self.path_resolved,self.opts)
     
     def generateSingleImage(self,number):
@@ -99,8 +105,15 @@ class Imager(object):
         self.opts = _set_default(self.opts,'txclr','white')
         self.opts = _set_default(self.opts,'scpwr',0.5)
         self.opts = _set_default(self.opts,'zoomf',1)
+        self.opts = _set_default(self.opts,'thres',20)
+
+        if self.opts['angds'] == 500:
+            print('It is actually quite important to set the angular diameter distance, that sets the scale')
 
         self.opts = generateSingleImage(self.path_resolved+selected_image,self.opts)
+    
+    def fillOpts(self):
+        pass
 
 def _compute_beam(head):
     beam_area = np.pi/(4*np.log(2)) * head['BMAJ'] * head['BMIN']
@@ -123,9 +136,10 @@ def _converter(frq,wrong_freq=231541442.871094):
     return right/wrong
 
 def _set_default(opts, key, default):
-    try:
-        a = opts[key]
-    except KeyError:
+    value = input('{}: '.format(key))
+    if value != ''
+        opts[key] = value
+    else:
         opts[key] = default
     return opts
 
@@ -163,10 +177,7 @@ def generate_fluxscale(path_to_int, opts={}):
     # Also assume the image is a nice square
     example_image = datalist[0]
     middle = int(np.shape(example_image)[0]/2)
-    try:
-        delta = opts['size_box']
-    except KeyError:
-        delta = 20
+    delta = opts['size_box']
     
     raw_fluxes = [np.sum(data[middle-delta:middle+delta,middle-delta:middle+delta]) for data in datalist]
     beam_corrected_fluxes = [raw_flux/beam_area for raw_flux,beam_area in zip(raw_fluxes,beam_areas)]
@@ -228,10 +239,7 @@ def plot_MFS(path_to_resolved, opts={}):
     try:
         # Correct the flux, if wanted
         flux = opts['fluxscale'](frequency)
-        try:
-            threshold = opts['thres']
-        except KeyError:
-            threshold = 20
+        threshold = opts['thres']
         inmask = np.array(data > (threshold * np.mean(data)),dtype=bool)
         raw_flux = np.sum(data[inmask])/beam_area
         ratio = flux/raw_flux
@@ -290,6 +298,7 @@ def plot_MFS(path_to_resolved, opts={}):
     plt.show()
     
     opts['regions'] = sels
+
     return opts
 
 def generateRegionSpectra(path_to_resolved,opts={}):
@@ -301,10 +310,7 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     frequencies = [head['CRVAL3'] for head in headers]
 
     # Try to zoom the image, just like before.
-    try:
-        zoomf = float(opts['zoomf'])
-    except KeyError:
-        zoomf = 1
+    zoomf = float(opts['zoomf'])
     zoomed_data = []
     for unzoomed in data:
         zoomed = zoom(unzoomed, zoomf)
@@ -343,6 +349,15 @@ def generateRegionSpectra(path_to_resolved,opts={}):
     ax.set_xticklabels(np.array(10**np.array(xticks)/1e6,dtype=int))
     ax.set_yticklabels(np.array(10**np.array(yticks),dtype=int))
     plt.show()
+
+    try:
+        figdict = opts['figdict']
+        figdict['region_spectra'] = f
+        opts['figdict'] = figdict
+    except KeyError:
+        opts['figdict'] = {'region_spectra': f}
+     
+    return opts
 
 def generateSingleImage(inname,opts={}):
     '''
