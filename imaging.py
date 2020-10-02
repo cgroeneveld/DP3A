@@ -136,11 +136,14 @@ def _converter(frq,wrong_freq=231541442.871094):
     return right/wrong
 
 def _set_default(opts, key, default):
-    value = input('{}: '.format(key))
-    if value != ''
-        opts[key] = value
-    else:
-        opts[key] = default
+    try:
+        a = opts[key]
+    except KeyError:
+        value = input('{}: '.format(key))
+        if value != ''
+            opts[key] = value
+        else:
+            opts[key] = default
     return opts
 
 def generate_fluxscale(path_to_int, opts={}):
