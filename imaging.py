@@ -1,5 +1,6 @@
 import sys
 sys.path.insert(1,'/net/vossemeer/data1/groeneveld/.local/lib/python2.7/site-packages')
+import shutil
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -93,6 +94,10 @@ class Imager(object):
 
         self.opts = generateRegionSpectra(self.path_resolved,self.opts)
     
+    def scaleImages(self):
+        self.opts = _set_default(self.opts,'thres',20)
+        scaleImages(self.opts, self.path_resolved)
+    
     def generateSingleImage(self,number):
         # First, parse the number to find the image you are interested in
         number_format = '{:04d}'.format(number)
@@ -117,8 +122,6 @@ class Imager(object):
 
         self.opts = generateSingleImage(self.path_resolved+selected_image,self.opts)
     
-    def fillOpts(self):
-        pass
 
 def _compute_beam(head):
     beam_area = np.pi/(4*np.log(2)) * head['BMAJ'] * head['BMIN']
@@ -528,6 +531,34 @@ def generateSingleImage(inname,opts={}):
         opts['figdict'] = {'spectral_images': [f]}
 
     return opts
+
+def scaleImages(opts, path_to_resolved):
+    dirl = np.sort(np.array(list(filter(lambda x: 'image' in x, os.listdir(path_to_resolved)))))
+    paths = [path_to_resolved+dirry for dirry in dirl]
+    data = [fits.getdata(ii) for ii in paths]
+    headers = [fits.getheader(ii) for ii in paths]
+    beam_areas = [_compute_beam(head) for head in headers]
+    frequencies = [head['CRVAL3'] for head in headers]
+
+    # Now, we scale the image. This is necessary, why else would you run this code?
+    fluxscale = opts['fluxscale']
+    correct_fluxes = [fluxscale(freq) for freq in frequencies]
+    new_data = []
+    for dat,correct_flux,beam_area in zip(data,correct_fluxes,beam_areas):
+        threshold = opts['thres']
+        mask = np.array(dat > (threshold * np.mean(dat)), dtype=bool)
+        actual_flux = np.sum(dat[mask])/beam_area
+        ratio = correct_flux/actual_flux
+        new_data.append(dat*ratio)
+    data = new_data
+    try:
+        os.mkdir('RESULTS')
+    except OSError:
+        shutil.rmtree('RESULTS')
+        os.mkdir('RESULTS')
+    for dat,head,name in zip(data,headers,dirl):
+        fits.writeto('RESULTS/'+name,dat,header=head,overwrite=True)
+        
 
 def main():
     opts = {}
