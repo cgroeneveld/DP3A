@@ -54,16 +54,16 @@ YY =   RR -  RL -  LR +  LL
 """
 
 import optparse
-import pyrap.tables as pt
+import casacore.tables as pt
 import numpy
 
 def main(options):
-
+	stepsize = 200000
 	cI = numpy.complex(0.,1.)
 	
 	inms = options.inms
 	if inms == '':
-			print 'Error: you have to specify an input MS, use -h for help'
+			print('Error: you have to specify an input MS, use -h for help')
 			return
 	column = options.column
 	outcol = options.outcol
@@ -72,50 +72,61 @@ def main(options):
 	if options.back:
 		lincol = options.lincol
 		if lincol not in t.colnames():
-				print 'Adding the output linear polarization column',lincol,'to',inms
-				coldmi = t.getdminfo(column)
-				coldmi['NAME'] = lincol
-				t.addcols(pt.maketabdesc(pt.makearrcoldesc(lincol, 0., valuetype='complex', shape=numpy.array(t.getcell(column,0)).shape)), coldmi)
+			print('Adding the output linear polarization column',lincol,'to',inms)            
+			desc = t.getcoldesc(column)
+			newdesc = pt.makecoldesc(lincol, desc)
+			newdmi = t.getdminfo(column)
+			newdmi['NAME'] = 'Dysco' + lincol
+			t.addcols(newdesc, newdmi)  
+            
 
                 ### RVW EDIT 2012   
-		print 'Reading the input column (circular)', column
+		print('Reading the input column (circular)', column)
 		if column not in t.colnames():
-			print 'Error: Input column does not exist'
+			print('Error: Input column does not exist')
 			return
-		
-		### RVW EDIT 2012 Input column with the -c switch 
-		cirdata = t.getcol(column)
-		#cirdata = t.getcol(outcol)
-		#print 'SHAPE ARRAY', numpy.shape(cirdata)
-		
-		print 'Computing the linear polarization terms...'
-		lindata = numpy.transpose(numpy.array([
-				0.5*(cirdata[:,:,0]+cirdata[:,:,1]+cirdata[:,:,2]+cirdata[:,:,3]),
-				0.5*(cI*cirdata[:,:,0]-cI*cirdata[:,:,1]+cI*cirdata[:,:,2]-cI*cirdata[:,:,3]),
-				0.5*(-cI*cirdata[:,:,0]-cI*cirdata[:,:,1]+cI*cirdata[:,:,2]+cI*cirdata[:,:,3]),
-				0.5*(cirdata[:,:,0]-cirdata[:,:,1]-cirdata[:,:,2]+cirdata[:,:,3])]),
-				(1,2,0))
-		print 'Finishing up...'
-		t.putcol(lincol, lindata)
+		for row in range(0,t.nrows(),stepsize):
+			print('Doing row', row, 'out of', t.nrows())
+			### RVW EDIT 2012 Input column with the -c switch 
+			cirdata = t.getcol(column, startrow=row, nrow=stepsize, rowincr=1)
+			#cirdata = t.getcol(outcol)
+			#print 'SHAPE ARRAY', numpy.shape(cirdata)
+            
+			print('Computing the linear polarization terms...')
+			lindata = numpy.transpose(numpy.array([
+                    0.5*(cirdata[:,:,0]+cirdata[:,:,1]+cirdata[:,:,2]+cirdata[:,:,3]),
+                    0.5*(cI*cirdata[:,:,0]-cI*cirdata[:,:,1]+cI*cirdata[:,:,2]-cI*cirdata[:,:,3]),
+                    0.5*(-cI*cirdata[:,:,0]-cI*cirdata[:,:,1]+cI*cirdata[:,:,2]+cI*cirdata[:,:,3]),
+                    0.5*(cirdata[:,:,0]-cirdata[:,:,1]-cirdata[:,:,2]+cirdata[:,:,3])]),
+                    (1,2,0))
+			print('Finishing up...')
+			t.putcol(lincol, lindata, startrow=row, nrow=stepsize, rowincr=1)
+		t.close()
 	else:
 		if outcol not in t.colnames():
-			print 'Adding the output column',outcol,'to',inms
-			coldmi = t.getdminfo(column)
-			coldmi['NAME'] = outcol
-			t.addcols(pt.maketabdesc(pt.makearrcoldesc(outcol, 0., valuetype='complex', shape=numpy.array(t.getcell(column,0)).shape)), coldmi)
-		print 'Reading the input column (linear)', column
-		data = t.getcol(column)
-		print 'Computing the output column'
-		outdata = numpy.transpose(numpy.array([
-				0.5*(data[:,:,0]-cI*data[:,:,1]+cI*data[:,:,2]+data[:,:,3]),
-				0.5*(data[:,:,0]+cI*data[:,:,1]+cI*data[:,:,2]-data[:,:,3]),
-				0.5*(data[:,:,0]-cI*data[:,:,1]-cI*data[:,:,2]-data[:,:,3]),
-				0.5*(data[:,:,0]+cI*data[:,:,1]-cI*data[:,:,2]+data[:,:,3])]),
-				(1,2,0))
-		print 'Finishing up...'
-		t.putcol(outcol, outdata)
+			print('Adding the output column',outcol,'to',inms)
+			desc = t.getcoldesc(column)
+			newdesc = pt.makecoldesc(outcol, desc)
+			newdmi = t.getdminfo(column)
+			newdmi['NAME'] = 'Dysco' + outcol
+			t.addcols(newdesc, newdmi)  			
+
+		print('Reading the input column (linear)', column)
+		for row in range(0,t.nrows(),stepsize):
+			print('Doing row', row, 'out of', t.nrows(), row+stepsize)
+			data = t.getcol(column, startrow=row, nrow=stepsize, rowincr=1)
+			print('Computing the output circular column')
+			outdata = numpy.transpose(numpy.array([
+                    0.5*(data[:,:,0]-cI*data[:,:,1]+cI*data[:,:,2]+data[:,:,3]),
+                    0.5*(data[:,:,0]+cI*data[:,:,1]+cI*data[:,:,2]-data[:,:,3]),
+                    0.5*(data[:,:,0]-cI*data[:,:,1]-cI*data[:,:,2]-data[:,:,3]),
+                    0.5*(data[:,:,0]+cI*data[:,:,1]-cI*data[:,:,2]+data[:,:,3])]),
+                    (1,2,0))
+			print('Finishing up...')
+			t.putcol(outcol, outdata, startrow=row, nrow=stepsize, rowincr=1)
+		t.close()
 	if options.poltable:
-		print 'Updating the POLARIZATION table...'
+		print('Updating the POLARIZATION table...')
 		tp = pt.table(inms+'/POLARIZATION',readonly=False,ack=True)
 		
 		### RVW EDIT 2012
@@ -133,5 +144,4 @@ if __name__ == '__main__':
     opt.add_option('-b','--back',help='Go back to linear polarization [default False]',default=False,action='store_true')
     opt.add_option('-l','--lincol',help='Output linear polarization column, if the -b switch is used [default DATA_LIN]; we want to keep the original DATA column',default='DATA_LIN')
     options, arguments = opt.parse_args()
-    print(options)
-    #main(options)
+    main(options)

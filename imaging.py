@@ -1,9 +1,11 @@
+#!/usr/bin/env python2.7
 import sys
 sys.path.insert(1,'/net/vossemeer/data1/groeneveld/.local/lib/python2.7/site-packages')
 import shutil
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 from matplotlib.patches import Ellipse
@@ -95,7 +97,7 @@ class Imager(object):
         self.opts = generateRegionSpectra(self.path_resolved,self.opts)
     
     def scaleImages(self):
-        self.opts = _set_default(self.opts,'thres',20)
+        # self.opts = _set_default(self.opts,'thres',20)
         scaleImages(self.opts, self.path_resolved)
     
     def generateSingleImage(self,number):
@@ -177,21 +179,26 @@ def generate_fluxscale(path_to_int, opts={}):
         OUTPUT:
             fluxscale           :  Integrated fluxscale, as determined by the image of Dutch LOFAR
     '''
-    dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x, os.listdir(path_to_int)))
-    sorted_images = np.sort(np.array(dirl)) # Returns the paths to images, all sorted.
-    datalist = [fits.getdata(path_to_int+imgpath)[0,0,:,:] for imgpath in sorted_images]
-    headlist = [fits.getheader(path_to_int+imgpath) for imgpath in sorted_images]
-    beam_areas = [_compute_beam(header) for header in headlist] # Beam sizes per image
-    frequencies = [head['CRVAL3'] for head in headlist]
-
+    '''
+        dirl = list(filter(lambda x: 'image' in x and 'MFS' not in x and 'pybdsf' not in x, os.listdir(path_to_int)))
+        sorted_images = np.sort(np.array(dirl)) # Returns the paths to images, all sorted.
+        datalist = [fits.getdata(path_to_int+imgpath)[0,0,:,:] for imgpath in sorted_images]
+        headlist = [fits.getheader(path_to_int+imgpath) for imgpath in sorted_images]
+        beam_areas = [_compute_beam(header) for header in headlist] # Beam sizes per image
+        frequencies = [head['CRVAL3'] for head in headlist]
+    '''
+    resfile = path_to_int+'results.csv'
+    df = pd.read_csv(resfile)
+    frequencies = np.array(df.iloc[0],dtype=float)[1:]
+    beam_corrected_fluxes = np.array(df.iloc[1],dtype=float)[1:]
     # From here we assume all images have the same size (in pixels)
     # Also assume the image is a nice square
-    example_image = datalist[0]
-    middle = int(np.shape(example_image)[0]/2)
-    delta = int(opts['size_box'])
+    # example_image = datalist[0]
+    # middle = int(np.shape(example_image)[0]/2)
+    # delta = int(opts['size_box'])
     
-    raw_fluxes = [np.sum(data[middle-delta:middle+delta,middle-delta:middle+delta]) for data in datalist]
-    beam_corrected_fluxes = [raw_flux/beam_area for raw_flux,beam_area in zip(raw_fluxes,beam_areas)]
+    # raw_fluxes = [np.sum(data[middle-delta:middle+delta,middle-delta:middle+delta]) for data in datalist]
+    # beam_corrected_fluxes = [raw_flux/beam_area for raw_flux,beam_area in zip(raw_fluxes,beam_areas)]
     try:
         # Frequency-bandpass correction required
         wrong_freq = opts['alt_reffreq']
@@ -199,6 +206,7 @@ def generate_fluxscale(path_to_int, opts={}):
         beam_corrected_fluxes *= correction_factors
     except KeyError:
         # no correction needed
+        print('no correction for wrong reference frequency')
         pass
 
     # Now fit a high-parameter model against this data
@@ -533,22 +541,24 @@ def generateSingleImage(inname,opts={}):
     return opts
 
 def scaleImages(opts, path_to_resolved):
-    dirl = np.sort(np.array(list(filter(lambda x: 'image' in x, os.listdir(path_to_resolved)))))
+    dirl = np.sort(np.array(list(filter(lambda x: 'image' in x and 'pybdsf' not in x, os.listdir(path_to_resolved)))))
     paths = [path_to_resolved+dirry for dirry in dirl]
     data = [fits.getdata(ii) for ii in paths]
     headers = [fits.getheader(ii) for ii in paths]
     beam_areas = [_compute_beam(head) for head in headers]
     frequencies = [head['CRVAL3'] for head in headers]
 
+    # Extract the 'wrong' fluxes via the pybdsf fluxes
+    df = pd.read_csv(path_to_resolved+'results.csv')
+    frequencies = np.array(df.iloc[0],dtype=float)[1:]
+    raw_fluxes = np.array(df.iloc[1],dtype=float)[1:]
+
     # Now, we scale the image. This is necessary, why else would you run this code?
     fluxscale = opts['fluxscale']
-    correct_fluxes = [fluxscale(freq) for freq in frequencies]
+    correct_fluxes = np.array([10**fluxscale(np.log10(freq)) for freq in frequencies])
+    ratios = correct_fluxes / raw_fluxes
     new_data = []
-    for dat,correct_flux,beam_area in zip(data,correct_fluxes,beam_areas):
-        threshold = opts['thres']
-        mask = np.array(dat > (threshold * np.mean(dat)), dtype=bool)
-        actual_flux = np.sum(dat[mask])/beam_area
-        ratio = correct_flux/actual_flux
+    for dat,ratio in zip(data,ratios):
         new_data.append(dat*ratio)
     data = new_data
     try:
@@ -564,9 +574,7 @@ def main():
     opts = {}
     img_maker = Imager(opts,sys.argv[1], sys.argv[2])
     img_maker.generate_fluxscale()
-    img_maker.plot_MFS()
-    img_maker.generateRegionSpectra()
-    img_maker.generateSingleImage(22)
+    img_maker.scaleImages()
 
 if __name__ == '__main__':
     main()

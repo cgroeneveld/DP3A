@@ -111,7 +111,8 @@ def main(parsed, cwd):
             callist[0].pickle_and_call(imgcall)
         elif red == 'l':
             callist = [lc.LinToCirc(n,ms,parsed.p,'{}/parsets/'.format(cwd)) for ms in mslist]
-            pool.map(executeCalibration, callist)
+            # pool.map(executeCalibration, callist)
+            executeCalibration(callist[0])
         else:
             print("Reduction step {} not implemented".format(red))
         if parsed.d:

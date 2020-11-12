@@ -148,6 +148,7 @@ class DiagonalCalibrator(object):
         self.pickle_and_call('DPPP {}'.format(self.ddephase))
         self.pickle_and_call('DPPP {}'.format(self.aphase))
         self.pickle_and_call('DPPP {}'.format(self.ddeamp))
+        process_diag('{0}instrument_a{1}.h5'.format(self.ms,self.n))
         self.pickle_and_call('DPPP {}'.format(self.aamp))
         self.pickle_and_call(self.losoto_p)
         self.pickle_and_call(self.losoto_a)
