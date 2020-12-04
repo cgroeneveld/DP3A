@@ -34,6 +34,7 @@ class LinToCirc(object):
     def run_lin2circ(self):
         options = FakeLinParser(self.ms, 'DATA', False, False, 'DATA_CIRC', 'DATA_LIN')
         lin2circ.main(options)
+        sys.stdout.flush()
         self.pickle_and_call("DPPP msin={0} msout={0}CRC msout.storagemanager=dysco msout.writefullresflag=false msin.datacolumn=DATA_CIRC msout.datacolumn=DATA steps=[]".format(self.ms[:-1]))
         shutil.move('{}CRC'.format(self.ms[:-1]),self.ms)
     

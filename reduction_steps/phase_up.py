@@ -27,7 +27,6 @@ class PhaseUp(object):
 
     def initialize(self):
         self._init_parsets()
-        self._init_dir()
         self.initialized = True
     
     def _init_dir(self):
@@ -151,6 +150,9 @@ class PhaseUp(object):
         predictor.initialize()
         predictor.execute()
         os.mkdir('{}/losoto'.format(self.ms))
+
+    def calibrate(self):
+        self.execute()
 
     def execute(self):
         if self.DEBUG:

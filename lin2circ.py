@@ -56,6 +56,7 @@ YY =   RR -  RL -  LR +  LL
 import optparse
 import casacore.tables as pt
 import numpy
+import sys
 
 def main(options):
 	stepsize = 200000
@@ -101,6 +102,7 @@ def main(options):
                     (1,2,0))
 			print('Finishing up...')
 			t.putcol(lincol, lindata, startrow=row, nrow=stepsize, rowincr=1)
+			sys.stdout.flush()
 		t.close()
 	else:
 		if outcol not in t.colnames():

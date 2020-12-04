@@ -27,6 +27,9 @@ class FakeParser(object):
         self.m = m
         self.multims = multi
 
+def executeOnly(cal):
+    cal.execute()
+
 def executeCalibration(cal):
     cal.calibrate()
 
@@ -78,6 +81,10 @@ def main(parsed, cwd):
     # Perform the reductions
     # TODO: need to fix all the necessary reductions, at least 'd' and 'm'
     for red, n in zip(redsteps, nlist):
+        print('-----------------------\n')
+        print('----------STEP:{}-------\n'.format(red))
+        print('-----------------------\n')
+        sys.stdout.flush()
         n = int(n)
         if red == 'p':
             callist = [pc.PhaseCalibrator(n,ms,parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
@@ -96,10 +103,9 @@ def main(parsed, cwd):
             imgcall += ' '.join(mslist)
             callist[0].pickle_and_call(imgcall)
         elif red == 'u':
-            for ms in mslist:
-                cal = pu.PhaseUp(n, ms, parsed.p, '{}/parsets/'.format(cwd), parsed.m)
-                cal.initialize()
-                cal.execute()
+            callist = [pu.PhaseUp(n,ms,parsed.p, '{}/parsets/'.format(cwd), parsed.m) for ms in mslist]
+            callist[0]._init_dir()
+            pool.map(executePredict, callist)
         elif red == 'm':
             callist = [pr.Predictor(ms, parsed.m, parsed.p, '{}/parsets/'.format(cwd)) for ms in mslist]
             pool.map(executePredict, callist)
@@ -111,10 +117,11 @@ def main(parsed, cwd):
             callist[0].pickle_and_call(imgcall)
         elif red == 'l':
             callist = [lc.LinToCirc(n,ms,parsed.p,'{}/parsets/'.format(cwd)) for ms in mslist]
-            # pool.map(executeCalibration, callist)
-            executeCalibration(callist[0])
+            pool.map(executeCalibration, callist)
+            # executeCalibration(callist[0])
         else:
             print("Reduction step {} not implemented".format(red))
+        sys.stdout.flush()
         if parsed.d:
             cal.DEBUG = True
         #if not parsed.multims:

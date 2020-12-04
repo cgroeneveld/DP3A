@@ -6,6 +6,7 @@ import tarfile
 import argparse
 import shutil
 import subprocess
+import datetime
 import re
 
 def init_folder(fname):
@@ -37,6 +38,19 @@ def copy_images(rname):
     assert rname[-1] == '/'
     shutil.copytree('runs/{}IMAGES'.format(rname), 'images/{}'.format(rname))
 
+def copy_losotoplots(ms_root, calibration):
+    names = os.listdir(ms_root)
+    dirl = [ms_root+dirry+'/losoto/'+calibration for dirry in names]
+    if 'ap' in calibration:
+        for ms_name, path in zip(names,dirl):
+            ampplotname = list(filter(lambda x: 'amp' in x and 'XX' in x, os.listdir(path)))[0]
+            shutil.copyfile(path+'/prephasedirpointing_polXX.png', 'p{}.png'.format(ms_name))
+            shutil.copyfile(path+'/'+ampplotname, 'a{}.png'.format(ms_name))
+    else:
+        # So phase only calibration
+        for ms_name, path in zip(names,dirl):
+            shutil.copyfile(path+'/dirpointing_polXX.png', '{}.png'.format(ms_name))
+
 def execute_run(rname, noms = False, nocompress = False, savesky = False, multims = False):
     assert rname[-1] == '/'
     if multims:
@@ -48,6 +62,10 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
             execlist.append(line.rstrip('\n'))
     mslist = os.listdir('measurements')
     modellist = os.listdir('models')
+
+    iso_date = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
+    logname = 'DP5_{}.log'.format(iso_date)
+
     if len(modellist) != 1:
         raise IOError('There should only be one model available, otherwise we can\'t autorun DP5')
     else:
@@ -57,9 +75,9 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
             os.mkdir('{0}/measurements/{1}/losoto'.format(rname,ms))
         # Run DP5.py
         if len(mslist) == 1:
-            execstring = 'DP5.py -y -ms {1}/measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd'.format(mslist[0], rname, modellist[0], execlist[0])
+            execstring = 'DP5.py -y -ms {1}/measurements/{0}/ -p {1} -m models/{2} -s {3} -path_wd | tee {4}'.format(mslist[0], rname, modellist[0], execlist[0], logname)
         else:
-            execstring = 'DP5.py -y -ms {0}/measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims'.format(rname, modellist[0], execlist[0])
+            execstring = 'DP5.py -y -ms {0}/measurements/ -p {0} -m models/{1} -s {2} -path_wd -multims | tee {3}'.format(rname, modellist[0], execlist[0], logname)
         subprocess.call(execstring, shell = True)
         # If -no-ms is given, run another wsclean run
         if noms or savesky:
@@ -79,11 +97,11 @@ def execute_run(rname, noms = False, nocompress = False, savesky = False, multim
             fulimg +=  ' '.join(ms_appendices)
             subprocess.call(fulimg, shell = True)
             shutil.copyfile('{}/noms/ws-MFS-image.fits'.format(rname), '{}/IMAGES/noms.fits'.format(rname))
-        # Run DP5-compress
+        # Run DP5-compress - lets not do this
         # Does not (fully) support multi-ms runs yet
-        if not nocompress:
-            print('==== RUNNING DP5-COMPRESS')
-            subprocess.call('DP5-compress.py -ms {1}/measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
+        # if not nocompress:
+            # print('==== RUNNING DP5-COMPRESS')
+            # subprocess.call('DP5-compress.py -ms {1}/measurements/{0}/ -r {1}'.format(mslist[0],rname), shell = True)
         # Remove instruments
         print('==== REMOVING INSTRUMENTS')
         '''
@@ -147,6 +165,8 @@ def main():
         copy_images(fname)
     elif step == 'execute':
         execute_run(fname,parsed.noms,parsed.nocomp,parsed.savesky, parsed.multims)
+    elif step == 'losotocopy':
+         copy_losotoplots(fname, folder2)
     else:
         raise NotImplementedError
     
